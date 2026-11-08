@@ -49,10 +49,10 @@ def build_scoring_notebook() -> None:
 
 Run this on **Colab, A100 GPU, standard memory**. That runtime is about 40 GB of GPU memory and 84 GB of system RAM.
 
-One raw clip is expanded to about 23 GB of frames in system RAM before VBench resizes it. `Human_Clothes` then loads LLaVA-Video-7B in bf16 (about 15 GB of weights plus a 64-frame video). Those two facts pick the machine:
+One raw clip is expanded to about 23 GB of frames in system RAM before VBench resizes it. That picks the machine:
 
-- **A100, standard memory.** Enough RAM for the frames and enough GPU memory for LLaVA. Leave High-RAM off; that only spends more compute units.
-- **L4** has about 53 GB of RAM, so the frames fit, but 22 GB of GPU memory is too tight for LLaVA-Video-7B.
+- **A100, standard memory.** Enough RAM for the frames. Leave High-RAM off; that only spends more compute units.
+- **L4** has about 53 GB of RAM, which is short of the frame buffer.
 - **G4** is an RTX PRO 6000 Blackwell. Same generation as the RTX 5060 this already failed on. VBench's CUDA stack is not built for it.
 - **H100** runs, and costs several times the A100 for six short clips.
 - **Kaggle T4 x2** does not pool into one 32 GB GPU for these metrics, and a TPU cannot run this PyTorch code.
@@ -64,9 +64,9 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 3. Runtime → Run all.
 4. When the last cell finishes, it downloads `rq1_vbench_csvs.zip`. Put those CSVs in the repo's `data/` folder. Add `human_ratings.csv` from Google Docs later, then run `rq1-aidrama.ipynb`.
 
-A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so the six finished VBench columns are not scored again.
+This notebook scores the six VBench 1.0 dimensions that apply to these clips: subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality. A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so those columns are not scored again.
 
-`Human_Clothes` loads LLaVA with PyTorch SDPA. This Colab torch build has no `flash_attn` package, and SDPA is the attention implementation that still answers in real words. Each question sent to LLaVA is printed, then the decoded answer. Before reading frames it sets Decord's bridge back to native, because `Human_Identity` switches that process-wide bridge to torch and `asnumpy()` then fails. A VBench result of `-1` is left blank: for clothes it means the clip is not one person throughout, and for identity it means fewer than 20 frames contained exactly one face. If every clothes clip is `-1`, the average is skipped instead of dividing by zero.
+`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. `Human_Anatomy` is not scored because `mmcv` has no wheel for this Colab PyTorch. Diversity and Multi-View Consistency need more than one clip per prompt. Those five are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -75,7 +75,7 @@ Missing scores stay missing. They are never written as zero. This notebook does 
 Outputs:
 
 - `clip_manifest.csv` — `video_id`, `path`, `source_id`, `duration`, `source_id_basis`
-- `metric_scores.csv` — one row per clip, versioned VBench / VBench-2.0 columns
+- `metric_scores.csv` — one row per clip, the six VBench 1.0 columns
 - `dimension_applicability.csv` — what ran, and why a dimension was skipped
 """))
 
@@ -145,8 +145,8 @@ def require_colab_a100() -> None:
     if ram_gb < 60 or vram_gb < 35:
         raise RuntimeError(
             f"This runtime has {vram_gb:.0f} GB of GPU memory and {ram_gb:.0f} GB of system RAM. "
-            "A full-resolution clip needs about 23 GB of system RAM, and Human_Clothes needs "
-            "about 40 GB of GPU memory so LLaVA-Video-7B fits. " + A100_SWITCH
+            "A full-resolution clip needs about 23 GB of system RAM before VBench resizes it. "
+            + A100_SWITCH
         )
     if vram_gb >= 70:
         print("Larger than a standard A100. Scoring will run. Standard A100 spends fewer compute units.")
@@ -223,7 +223,7 @@ VBENCH_DIMENSIONS = [
     "aesthetic_quality",
     "imaging_quality",
 ]
-VBENCH2_DIMENSIONS = ["Human_Anatomy", "Human_Identity", "Human_Clothes"]
+VBENCH2_DIMENSIONS = []
 
 def metric_column(benchmark: str, dimension: str) -> str:
     if benchmark == "vbench":
@@ -238,10 +238,43 @@ DIMENSION_SPECS = [
     for name in VBENCH2_DIMENSIONS
 ]
 DIMENSIONS = [spec["column"] for spec in DIMENSION_SPECS]
-EXCLUDED_SINGLE_CLIP = [
+EXCLUDED_DIMENSIONS = [
+    {
+        "benchmark": "vbench2",
+        "dimension": "Human_Identity",
+        "single_clip": True,
+        "status": "not_applicable_multi_person",
+        "reason": (
+            "VBench-2.0 anchors identity to one face in the opening frame and "
+            "drops a clip with fewer than 20 single-face frames. "
+            "These drama clips show several people, so the dimension is not scored."
+        ),
+    },
+    {
+        "benchmark": "vbench2",
+        "dimension": "Human_Clothes",
+        "single_clip": True,
+        "status": "not_applicable_multi_person",
+        "reason": (
+            "VBench-2.0 asks whether only one person is present throughout and "
+            "does not score clothes otherwise. These drama clips show several people."
+        ),
+    },
+    {
+        "benchmark": "vbench2",
+        "dimension": "Human_Anatomy",
+        "single_clip": True,
+        "status": "excluded",
+        "reason": (
+            "Human Anatomy looks at each person, but mmcv has no wheel for this "
+            "Colab PyTorch, so the dimension cannot be scored here."
+        ),
+    },
     {
         "benchmark": "vbench2",
         "dimension": "Diversity",
+        "single_clip": False,
+        "status": "not_applicable_single_clip",
         "reason": (
             "VBench-2.0 custom input needs >=20 videos for one prompt "
             "(prompt-index.mp4, index 0..19). One raw clip has no Diversity score."
@@ -250,6 +283,8 @@ EXCLUDED_SINGLE_CLIP = [
     {
         "benchmark": "vbench2",
         "dimension": "Multi-View_Consistency",
+        "single_clip": False,
+        "status": "not_applicable_single_clip",
         "reason": (
             "VBench-2.0 custom input expects multiple views in their own folder. "
             "One raw clip is not a multi-view set."
@@ -402,13 +437,13 @@ def applicability_table(per_dimension: dict | None = None) -> pd.DataFrame:
                 "Official custom_input scores one raw video on this dimension.",
             ),
         })
-    for spec in EXCLUDED_SINGLE_CLIP:
+    for spec in EXCLUDED_DIMENSIONS:
         rows.append({
             "dimension": spec["dimension"],
             "column_name": "",
             "benchmark": spec["benchmark"],
-            "custom_input_single_clip": False,
-            "status": "not_applicable_single_clip",
+            "custom_input_single_clip": spec["single_clip"],
+            "status": spec["status"],
             "reason": spec["reason"],
         })
     return pd.DataFrame(rows)
@@ -506,31 +541,6 @@ def load_saved_metrics():
     return found[0][2]
 
 
-def ensure_huggingface_cli():
-    # Colab's huggingface-cli is a stub that exits before any download. VBench calls that name.
-    bindir = Path.home() / ".local" / "bin"
-    bindir.mkdir(parents=True, exist_ok=True)
-    script = bindir / "huggingface-cli"
-    script.write_text(
-        "#!/usr/bin/env python\\n"
-        "import sys\\n"
-        "from huggingface_hub import snapshot_download\\n"
-        "args = sys.argv[1:]\\n"
-        "if len(args) < 2 or args[0] != 'download':\\n"
-        "    raise SystemExit('huggingface-cli shim only implements: download <repo> --local-dir <dir>')\\n"
-        "repo = args[1]\\n"
-        "local_dir = args[args.index('--local-dir') + 1]\\n"
-        "repo_type = 'model'\\n"
-        "if '--repo-type' in args:\\n"
-        "    repo_type = args[args.index('--repo-type') + 1]\\n"
-        "snapshot_download(repo_id=repo, repo_type=repo_type, local_dir=local_dir)\\n",
-        encoding="utf-8",
-    )
-    script.chmod(0o755)
-    os.environ["PATH"] = str(bindir) + os.pathsep + os.environ.get("PATH", "")
-    return "huggingface-cli shim is first on PATH and downloads public repos without a token"
-
-
 def install_core_packages():
     if not INSTALL_SCORING_DEPS:
         print("RQ1_INSTALL_DEPS=0: using packages already installed.")
@@ -552,243 +562,6 @@ def install_core_packages():
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
     if skipped:
         print("Packages left unchanged:", ", ".join(skipped))
-    try:
-        if not pip_would_change_torch(["retinaface_pytorch==0.0.8"]):
-            subprocess.check_call([
-                sys.executable, "-m", "pip", "install", "retinaface_pytorch==0.0.8", "--no-deps",
-            ])
-        else:
-            print("Skipping retinaface_pytorch because pip would replace torch.")
-    except Exception as exc:
-        print("retinaface_pytorch install failed. Human_Identity will record the import error.")
-        print(exc)
-    identity_deps = ["albumentations==1.4.18", "opencv-python-headless<4.11"]
-    try:
-        if pip_would_change_torch(identity_deps):
-            print("Skipping albumentations because pip would replace torch.")
-        else:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", *identity_deps])
-    except Exception as exc:
-        print("albumentations install failed. Human_Identity will record the import error.")
-        print(exc)
-
-
-def add_llava_import_root(checkout: Path) -> Path:
-    llava_root = checkout / "VBench-2.0" / "vbench2" / "third_party" / "LLaVA_NeXT"
-    if not llava_root.is_dir():
-        raise FileNotFoundError(f"Bundled LLaVA-NeXT is missing: {llava_root}")
-    entry = str(llava_root)
-    if entry not in sys.path:
-        sys.path.insert(0, entry)
-    return llava_root
-
-
-def prefetch_retinaface() -> str:
-    import torch
-    url = "https://github.com/ternaus/retinaface/releases/download/0.01/retinaface_resnet50_2020-07-20-f168fae3c.zip"
-    dest = Path(torch.hub.get_dir()) / "checkpoints" / "retinaface_resnet50_2020-07-20-f168fae3c.zip"
-    if dest.is_file() and dest.stat().st_size > 1_000_000:
-        return f"retinaface weights already at {dest}"
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    partial = dest.with_suffix(dest.suffix + ".partial")
-    last = "not attempted"
-    for attempt in range(1, 4):
-        proc = subprocess.run(
-            ["curl", "-L", "--retry", "5", "--retry-all-errors", "-o", str(partial), url],
-            capture_output=True, text=True,
-        )
-        if proc.returncode == 0 and partial.is_file() and partial.stat().st_size > 1_000_000:
-            partial.replace(dest)
-            return f"retinaface weights downloaded to {dest}"
-        last = (proc.stderr or proc.stdout or "curl failed")[-400:]
-        print(f"retinaface download attempt {attempt} failed:", last)
-    print("Human_Identity will try torch.hub next, which hit HTTP 504 on the last Colab run.")
-    return last
-
-
-def drop_imported_vbench() -> None:
-    for name in list(sys.modules):
-        if (
-            name == "vbench2"
-            or name.startswith("vbench2.")
-            or name == "llava"
-            or name.startswith("llava.")
-        ):
-            del sys.modules[name]
-
-
-def use_pytorch_sdpa_for_llava(checkout: Path) -> str:
-    # LLaVA-NeXT defaults to flash_attention_2. Colab's torch has no flash_attn wheel.
-    # SDPA is built into this torch and is the implementation that still answers in words.
-    builder = (
-        checkout / "VBench-2.0" / "vbench2" / "third_party"
-        / "LLaVA_NeXT" / "llava" / "model" / "builder.py"
-    )
-    text = builder.read_text(encoding="utf-8")
-    old = 'attn_implementation="flash_attention_2"'
-    new = 'attn_implementation="sdpa"'
-    if old not in text:
-        if new not in text:
-            raise RuntimeError(f"LLaVA builder has no attention default to change: {builder}")
-    else:
-        builder.write_text(text.replace(old, new, 1), encoding="utf-8")
-    drop_imported_vbench()
-    return "LLaVA attention is sdpa. This torch build has no flash_attn package."
-
-
-def fix_clothes_decord_bridge(checkout: Path) -> str:
-    # Human Identity sets Decord's process-wide bridge to torch at import.
-    # Clothes calls asnumpy(), which exists on a Decord array and not on a Tensor.
-    path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
-    text = path.read_text(encoding="utf-8")
-    needle = "from decord import VideoReader, cpu\\n"
-    if "import decord\\n" not in text:
-        if needle not in text:
-            raise RuntimeError("human_clothes.py has no decord import to extend")
-        text = text.replace(needle, "import decord\\n" + needle, 1)
-    start = text.find("def load_video(")
-    end = text.find("\\ndef LLaVA_Video(")
-    if start < 0 or end < 0 or end <= start:
-        raise RuntimeError("human_clothes.py has no load_video function to replace")
-    current = text[start:end]
-    if 'set_bridge("native")' in current and "import decord\\n" in text:
-        if text != path.read_text(encoding="utf-8"):
-            path.write_text(text, encoding="utf-8")
-        drop_imported_vbench()
-        return "Human_Clothes already resets Decord to native before asnumpy()"
-    replacement = "\\n".join([
-        "def load_video(video_path, max_frames_num, fps=1, force_sample=False):",
-        "    if max_frames_num == 0:",
-        "        return np.zeros((1, 336, 336, 3))",
-        "    # Human Identity sets the torch bridge for the whole process.",
-        "    # get_batch must return a Decord array so asnumpy() exists.",
-        '    decord.bridge.set_bridge("native")',
-        "    vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)",
-        "    total_frame_num = len(vr)",
-        "    video_time = total_frame_num / vr.get_avg_fps()",
-        "    fps = round(vr.get_avg_fps() / fps)",
-        "    frame_idx = [i for i in range(0, len(vr), fps)]",
-        "    frame_time = [i / fps for i in frame_idx]",
-        "    if len(frame_idx) > max_frames_num or force_sample:",
-        "        sample_fps = max_frames_num",
-        "        uniform_sampled_frames = np.linspace(0, total_frame_num - 1, sample_fps, dtype=int)",
-        "        frame_idx = uniform_sampled_frames.tolist()",
-        "        frame_time = [i / vr.get_avg_fps() for i in frame_idx]",
-        '    frame_time = ",".join([f"{i:.2f}s" for i in frame_time])',
-        "    batch = vr.get_batch(frame_idx)",
-        '    spare_frames = batch.asnumpy() if hasattr(batch, "asnumpy") else batch.detach().cpu().numpy()',
-        "    return spare_frames, frame_time, video_time",
-        "",
-        "",
-    ])
-    text = text[:start] + replacement + text[end:]
-    path.write_text(text, encoding="utf-8")
-    drop_imported_vbench()
-    return "Human_Clothes resets Decord to native before asnumpy()"
-
-
-def keep_clothes_results_when_none_qualify(checkout: Path) -> str:
-    # Every clip can be -1. VBench then divides the empty total by zero and
-    # discards the per-video results. Keep those results and skip the average.
-    path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
-    text = path.read_text(encoding="utf-8")
-    old_return = "    return final_score/valid_num, processed_json\\n"
-    new_return = (
-        "    if valid_num == 0:\\n"
-        "        return None, processed_json\\n"
-        "    return final_score/valid_num, processed_json\\n"
-    )
-    old_avg = "    all_results = score/num\\n"
-    new_avg = (
-        "    if num == 0:\\n"
-        "        all_results = None\\n"
-        "    else:\\n"
-        "        all_results = score/num\\n"
-    )
-    if "if valid_num == 0:" in text and "if num == 0:" in text:
-        drop_imported_vbench()
-        return "Human_Clothes keeps per-video results when every clip is -1"
-    if old_return not in text or old_avg not in text:
-        raise RuntimeError("human_clothes.py has no empty-average division to guard")
-    text = text.replace(old_return, new_return, 1).replace(old_avg, new_avg, 1)
-    path.write_text(text, encoding="utf-8")
-    drop_imported_vbench()
-    return "Human_Clothes no longer divides by zero when every clip is -1"
-
-
-def trace_llava_clothes(checkout: Path) -> str:
-    # Print the chat prompt and the decoded answer inside the pinned Human_Clothes function.
-    path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
-    text = path.read_text(encoding="utf-8")
-    if "Human_Clothes PROMPT:" in text and "Human_Clothes OUTPUT:" in text:
-        drop_imported_vbench()
-        return "Human_Clothes prints each prompt and decoded answer"
-    replacements = [
-        (
-            "                prompt_question = conv.get_prompt()\\n"
-            "                input_ids = tokenizer_image_token(prompt_question, tokenizer, IMAGE_TOKEN_INDEX, return_tensors=\\"pt\\").unsqueeze(0).to(device)\\n",
-            "                prompt_question = conv.get_prompt()\\n"
-            "                print(\\"\\\\nHuman_Clothes PROMPT:\\", os.path.basename(str(video_path)), f\\"question {i + 1}/{len(base_question)}\\", flush=True)\\n"
-            "                print(prompt_question, flush=True)\\n"
-            "                input_ids = tokenizer_image_token(prompt_question, tokenizer, IMAGE_TOKEN_INDEX, return_tensors=\\"pt\\").unsqueeze(0).to(device)\\n",
-        ),
-        (
-            "                text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)[0].strip()\\n",
-            "                text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)[0].strip()\\n"
-            "                print(\\"Human_Clothes OUTPUT:\\", text_outputs, flush=True)\\n",
-        ),
-        (
-            "            if not valid:\\n"
-            "                new_item[f\\"video_results\\"]=-1\\n"
-            "                processed_json.append(new_item)\\n",
-            "            if not valid:\\n"
-            "                new_item[f\\"video_results\\"]=-1\\n"
-            "                print(\\"Human_Clothes RECORDED:\\", os.path.basename(str(video_path)), new_item[\\"video_results\\"], flush=True)\\n"
-            "                processed_json.append(new_item)\\n",
-        ),
-        (
-            "            valid_num+=1\\n"
-            "\\n"
-            "            processed_json.append(new_item)\\n",
-            "            valid_num+=1\\n"
-            "            print(\\"Human_Clothes RECORDED:\\", os.path.basename(str(video_path)), new_item[\\"video_results\\"], flush=True)\\n"
-            "\\n"
-            "            processed_json.append(new_item)\\n",
-        ),
-    ]
-    for old, new in replacements:
-        if old not in text:
-            raise RuntimeError("Human_Clothes trace patch did not match vbench2/human_clothes.py")
-        text = text.replace(old, new, 1)
-    path.write_text(text, encoding="utf-8")
-    drop_imported_vbench()
-    return "Human_Clothes will print each LLaVA prompt and decoded answer"
-
-
-def install_anatomy_stack():
-    if not INSTALL_SCORING_DEPS:
-        return
-    import torch
-    version = torch.__version__.split("+")[0]
-    torch_tag = ".".join(version.split(".")[:2])
-    cuda = getattr(torch.version, "cuda", None) or ""
-    cu_tag = "cu" + "".join(cuda.split(".")[:2]) if cuda else ""
-    index = f"https://download.openmmlab.com/mmcv/dist/{cu_tag}/torch{torch_tag}/index.html"
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "mmengine", "mmdet", "mmyolo"])
-        if pip_would_change_torch(["mmcv==2.2.0"]):
-            print("Skipping mmcv==2.2.0 because it would replace the CUDA torch build.")
-            print("Human_Anatomy will be left missing if its import needs that wheel.")
-            return
-        subprocess.check_call([
-            sys.executable, "-m", "pip", "install", "mmcv==2.2.0",
-            "-f", index, "--no-cache-dir",
-        ])
-        print("Human_Anatomy packages installed from", index)
-    except Exception as exc:
-        print("Human_Anatomy packages were not installed.")
-        print(exc)
-        print("The other dimensions still run.")
 
 
 def ensure_vbench_checkout():
@@ -933,7 +706,7 @@ display(manifest)
     cells.append(md("""
 ## 2. Official custom-input scoring
 
-Each target dimension is submitted alone with `mode='custom_input'`. Diversity and Multi-View_Consistency are not submitted. Set `RQ1_RUN_SCORING=0` to rebuild the metric table skeleton / reuse an existing file without calling VBench again.
+Each of the six VBench 1.0 dimensions is submitted alone with `mode='custom_input'`. Identity, clothes, anatomy, Diversity, and Multi-View Consistency are not submitted. Set `RQ1_RUN_SCORING=0` to rebuild the metric table skeleton / reuse an existing file without calling VBench again.
 """))
 
     cells.append(code("""
@@ -987,26 +760,12 @@ def score_one(benchmark, dimension, column, staged_by_id, full_json):
     parsed = parse_dimension_payload(payload[dimension])
     per_video = {}
     missing = []
-    rejected = []
     for video_id, staged in staged_by_id.items():
         value = lookup_score(parsed, staged.name) if parsed else None
-        if dimension in {"Human_Clothes", "Human_Identity"} and value is not None and float(value) < 0:
-            rejected.append(video_id)
-            value = None
         per_video[video_id] = value
-        if value is None and video_id not in rejected:
+        if value is None:
             missing.append(video_id)
     reason = f"Read per-video custom_input scores from {result_path.name}."
-    if rejected:
-        if dimension == "Human_Identity":
-            detail = "fewer than 20 frames contained exactly one face, so identity is not scored"
-        else:
-            detail = "the clip is not one person throughout, so clothes consistency is not scored"
-        reason += (
-            " Left missing for "
-            + ", ".join(rejected)
-            + f" because VBench-2.0 returned -1 ({detail})."
-        )
     if missing:
         reason += " No score returned for: " + ", ".join(missing) + "."
     if not parsed:
@@ -1047,25 +806,16 @@ else:
         checkout, commit = ensure_vbench_checkout()
         print(torch_note)
         print("VBench checkout", commit)
-        for entry in (str(checkout / "VBench-2.0"), str(checkout)):
-            if entry not in sys.path:
-                sys.path.insert(0, entry)
-        print("LLaVA-NeXT import root", add_llava_import_root(checkout))
+        entry = str(checkout)
+        if entry not in sys.path:
+            sys.path.insert(0, entry)
         os.environ["VBENCH_CACHE_DIR"] = str(CACHE_DIR / "weights")
-        os.environ["VBENCH2_CACHE_DIR"] = str(CACHE_DIR / "weights")
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         print(shim_torchvision_write_video())
         install_core_packages()
         print(ensure_decord())
-        print(ensure_huggingface_cli())
-        print(prefetch_retinaface())
-        print(use_pytorch_sdpa_for_llava(checkout))
-        print(fix_clothes_decord_bridge(checkout))
-        print(keep_clothes_results_when_none_qualify(checkout))
-        print(trace_llava_clothes(checkout))
-        install_anatomy_stack()
         full_vbench = checkout / "vbench" / "VBench_full_info.json"
-        full_vbench2 = checkout / "VBench-2.0" / "vbench2" / "VBench2_full_info.json"
+        full_vbench2 = full_vbench
         STAGED_DIR.mkdir(parents=True, exist_ok=True)
         staged_by_id = {}
         stage_errors = []
@@ -1092,38 +842,12 @@ else:
                 continue
             already = pd.to_numeric(metrics[spec["column"]], errors="coerce")
             if already.notna().all():
-                reason = "Reused complete scores already stored in metric_scores.csv."
-                negative = already < 0
-                if spec["dimension"] in {"Human_Identity", "Human_Clothes"} and bool(negative.any()):
-                    ids = metrics.loc[negative, "video_id"].astype(str).tolist()
-                    metrics.loc[negative, spec["column"]] = np.nan
-                    if spec["dimension"] == "Human_Identity":
-                        detail = "fewer than 20 frames contained exactly one face, so identity is not scored"
-                    else:
-                        detail = "the clip is not one person throughout, so clothes consistency is not scored"
-                    reason += (
-                        " Left missing for "
-                        + ", ".join(ids)
-                        + f" because VBench-2.0 returned -1 ({detail})."
-                    )
-                    print(" ", spec["dimension"], "already scored;", ", ".join(ids), "left missing (-1)")
-                else:
-                    print(" ", spec["dimension"], "already scored, left unchanged")
-                per_dimension[spec["dimension"]] = {"status": "scored", "reason": reason}
+                per_dimension[spec["dimension"]] = {
+                    "status": "scored",
+                    "reason": "Reused complete scores already stored in metric_scores.csv.",
+                }
+                print(" ", spec["dimension"], "already scored, left unchanged")
                 continue
-            if spec["dimension"] == "Human_Anatomy":
-                try:
-                    import mmcv  # noqa: F401
-                except Exception as exc:
-                    msg = (
-                        type(exc).__name__
-                        + ": "
-                        + str(exc)
-                        + ". No mmcv wheel matches this PyTorch, so Human_Anatomy was not scored."
-                    )
-                    per_dimension[spec["dimension"]] = {"status": "failed", "reason": msg}
-                    print(" ", spec["dimension"], "FAILED:", msg)
-                    continue
             try:
                 print("Scoring", spec["dimension"], "...")
                 per_video, reason = score_one(
@@ -1189,7 +913,7 @@ def build_association_notebook() -> None:
     cells.append(md("""
 # RQ1: Video-quality metrics and human enjoyment
 
-**Research question:** How strongly are scores on selected VBench and VBench-2.0 dimensions associated with human viewers' enjoyment ratings of AI-generated drama clips?
+**Research question:** How strongly are scores on the six VBench 1.0 dimensions associated with human viewers' enjoyment ratings of AI-generated drama clips?
 
 Primary analysis: one Spearman correlation per prespecified dimension against mean human enjoyment per clip, with percentile bootstrap 95% confidence intervals, two-sided Monte Carlo permutation tests, and Holm correction across all selected dimensions.
 
@@ -1241,9 +965,6 @@ DIMENSIONS = [
     "vbench_dynamic_degree",
     "vbench_aesthetic_quality",
     "vbench_imaging_quality",
-    "vbench2_human_anatomy",
-    "vbench2_human_identity",
-    "vbench2_human_clothes",
 ]
 SCALE_MIN, SCALE_MAX = 1, 5
 MIN_RATERS_PER_CLIP = 3

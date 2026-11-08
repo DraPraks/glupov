@@ -60,15 +60,11 @@ VBench (official custom-input supported):
 - `aesthetic_quality`
 - `imaging_quality`
 
-VBench-2.0 (human-fidelity focused examples):
+The confirmatory set is those six VBench 1.0 dimensions. Column names are `vbench_` plus the dimension name.
 
-- `Human_Anatomy`
-- `Human_Identity`
-- `Human_Clothes`
+VBench-2.0 `Human_Identity` and `Human_Clothes` are excluded: both score one person, and the drama clips show several. `Human_Anatomy` would look at each person, and it is excluded because `mmcv` has no wheel for the Colab PyTorch used here. Diversity and Multi-View Consistency need more than one clip per prompt. The scoring notebook records these exclusions in `dimension_applicability.csv` and does not put them in `metric_scores.csv`.
 
-Other VBench-2.0 dimensions such as Diversity or Multi-View_Consistency have additional requirements (for example, multiple videos per prompt) and are not treated as ordinary single-clip scores.
-
-Pilot on study clips to confirm applicability and missingness before finalizing the analysis set. Use distinct column names that encode benchmark version (e.g., `vbench_subject_consistency`, `vbench2_human_anatomy`).
+`dynamic_degree` is in the set. On this six-clip pilot it is 1 for every clip, so Spearman cannot test it until the column varies.
 
 ### Data Preparation
 
