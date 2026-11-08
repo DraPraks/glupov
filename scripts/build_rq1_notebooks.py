@@ -554,9 +554,8 @@ def install_core_packages():
         print("Packages left unchanged:", ", ".join(skipped))
 
 
-ANATOMY_YOLO_URL = (
-    "git+https://github.com/AILab-CVC/YOLO-World.git@4826695a84ce370dad7fe4cb555a6c7162f3751d"
-)
+ANATOMY_YOLO_COMMIT = "4826695a84ce370dad7fe4cb555a6c7162f3751d"
+ANATOMY_YOLO_URL = "git+https://github.com/AILab-CVC/YOLO-World.git@" + ANATOMY_YOLO_COMMIT
 ANATOMY_PACKAGES = [
     "setuptools>=77",
     "mmengine==0.10.5",
@@ -610,19 +609,44 @@ def install_anatomy_mmcv():
     subprocess.check_call(command)
 
 
-def install_anatomy_yolo():
+def installed_yolo_commit():
     import importlib.metadata
     try:
-        importlib.metadata.version("yolo-world")
-        print("yolo-world already installed")
-        return
+        dist = importlib.metadata.distribution("yolo-world")
     except importlib.metadata.PackageNotFoundError:
-        pass
-    print("Installing YOLO-World without replacing mmyolo.")
+        return ""
+    raw = dist.read_text("direct_url.json") or ""
+    if not raw:
+        return ""
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return ""
+    vcs = payload.get("vcs_info") or {}
+    return str(vcs.get("commit_id") or "")
+
+
+def install_anatomy_yolo():
+    found = installed_yolo_commit()
+    if found == ANATOMY_YOLO_COMMIT:
+        print("yolo-world", ANATOMY_YOLO_COMMIT, "already installed")
+        return
+    print("Installing YOLO-World", ANATOMY_YOLO_COMMIT, "without replacing mmyolo.")
     subprocess.check_call([
-        sys.executable, "-m", "pip", "install", "--no-deps", "--no-build-isolation",
-        ANATOMY_YOLO_URL,
+        sys.executable, "-m", "pip", "install", "--force-reinstall", "--no-deps",
+        "--no-build-isolation", ANATOMY_YOLO_URL,
     ])
+    found = installed_yolo_commit()
+    if found != ANATOMY_YOLO_COMMIT:
+        raise RuntimeError(
+            "YOLO-World install did not record commit " + ANATOMY_YOLO_COMMIT
+            + ". Found " + (found or "no direct URL") + "."
+        )
+    if "yolo_world" in sys.modules:
+        raise RuntimeError(
+            "YOLO-World was reinstalled after it had been imported. "
+            "Runtime → Restart runtime, then Run all."
+        )
 
 
 def patch_anatomy_packages():
@@ -662,16 +686,23 @@ def patch_anatomy_packages():
 
 def patch_anatomy_clip_config(checkout: Path):
     root = checkout / "VBench-2.0" / "vbench2" / "third_party" / "YOLO-World"
-    old = "text_model_name = '/mnt/petrelfs/zhengdian/code/ckpt/clip-vit-base-patch32'"
-    new = "text_model_name = 'openai/clip-vit-base-patch32'"
+    private_clip = "/mnt/petrelfs/zhengdian/code/ckpt/clip-vit-base-patch32"
+    public_clip = "openai/clip-vit-base-patch32"
     if not root.is_dir():
         raise RuntimeError(f"Missing YOLO-World configs under {root}")
     changed = []
-    for path in sorted(root.glob("yolo_world_v2_*.py")):
+    for path in sorted(root.rglob("*.py")):
         text = path.read_text(encoding="utf-8")
-        if old in text:
-            path.write_text(text.replace(old, new), encoding="utf-8")
-            changed.append(path.name)
+        if private_clip in text:
+            path.write_text(text.replace(private_clip, public_clip), encoding="utf-8")
+            changed.append(str(path.relative_to(root)))
+    remaining = []
+    private_bytes = private_clip.encode("utf-8")
+    for path in sorted(root.rglob("*")):
+        if path.is_file() and private_bytes in path.read_bytes():
+            remaining.append(str(path.relative_to(root)))
+    if remaining:
+        raise RuntimeError("Private CLIP path remains in " + ", ".join(remaining))
     if changed:
         print("Pointed CLIP at openai/clip-vit-base-patch32 in", ", ".join(changed))
     else:
@@ -953,7 +984,7 @@ else:
         install_core_packages()
         print(ensure_decord())
         full_vbench = checkout / "vbench" / "VBench_full_info.json"
-        full_vbench2 = full_vbench
+        full_vbench2 = VBENCH2_HOME / "vbench2" / "VBench2_full_info.json"
         STAGED_DIR.mkdir(parents=True, exist_ok=True)
         staged_by_id = {}
         stage_errors = []
