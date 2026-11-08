@@ -1,0 +1,12 @@
+dimension,column_name,benchmark,custom_input_single_clip,status,reason
+subject_consistency,vbench_subject_consistency,vbench,True,scored,Read per-video custom_input scores from vbench_subject_consistency_eval_results.json.
+background_consistency,vbench_background_consistency,vbench,True,scored,Read per-video custom_input scores from vbench_background_consistency_eval_results.json.
+motion_smoothness,vbench_motion_smoothness,vbench,True,scored,Read per-video custom_input scores from vbench_motion_smoothness_eval_results.json.
+dynamic_degree,vbench_dynamic_degree,vbench,True,scored,Read per-video custom_input scores from vbench_dynamic_degree_eval_results.json.
+aesthetic_quality,vbench_aesthetic_quality,vbench,True,scored,Read per-video custom_input scores from vbench_aesthetic_quality_eval_results.json.
+imaging_quality,vbench_imaging_quality,vbench,True,scored,Read per-video custom_input scores from vbench_imaging_quality_eval_results.json.
+Human_Anatomy,vbench2_human_anatomy,vbench2,True,failed,ImportError: cannot import name 'write_video' from 'torchvision.io' (/usr/local/lib/python3.13/dist-packages/torchvision/io/__init__.py)
+Human_Identity,vbench2_human_identity,vbench2,True,failed,ImportError: cannot import name 'write_video' from 'torchvision.io' (/usr/local/lib/python3.13/dist-packages/torchvision/io/__init__.py)
+Human_Clothes,vbench2_human_clothes,vbench2,True,failed,ImportError: cannot import name 'write_video' from 'torchvision.io' (/usr/local/lib/python3.13/dist-packages/torchvision/io/__init__.py)
+Diversity,,vbench2,False,not_applicable_single_clip,"VBench-2.0 custom input needs >=20 videos for one prompt (prompt-index.mp4, index 0..19). One raw clip has no Diversity score."
+Multi-View_Consistency,,vbench2,False,not_applicable_single_clip,VBench-2.0 custom input expects multiple views in their own folder. One raw clip is not a multi-view set.

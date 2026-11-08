@@ -1,0 +1,11 @@
+# Regenerable VBench working files
+data/vbench_raw/
+data/staged_clips/
+rq1_outputs/
+rq1_outputs_demo/
+
+# Python / local
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/

@@ -1,0 +1,7 @@
+video_id,path,source_id,duration,source_id_basis
+drama_clip_01,dataset/drama_clip_01.mp4,unlabeled_pilot,32.019308,provisional_unlabeled
+drama_clip_02,dataset/drama_clip_02.mp4,unlabeled_pilot,15.985442,provisional_unlabeled
+drama_clip_03,dataset/drama_clip_03.mp4,unlabeled_pilot,29.034667,provisional_unlabeled
+drama_clip_04,dataset/drama_clip_04.mp4,unlabeled_pilot,23.68,provisional_unlabeled
+drama_clip_05,dataset/drama_clip_05.mp4,unlabeled_pilot,33.0,provisional_unlabeled
+drama_clip_06,dataset/drama_clip_06.mp4,unlabeled_pilot,31.0,provisional_unlabeled
