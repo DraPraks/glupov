@@ -66,6 +66,8 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 
 A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so the six finished VBench columns are not scored again.
 
+`Human_Clothes` loads LLaVA with PyTorch SDPA. This Colab torch build has no `flash_attn` package, and SDPA is the attention implementation that still answers in real words. Each question sent to LLaVA is printed, then the decoded answer. A VBench result of `-1` is left blank: for clothes it means the clip is not one person throughout, and for identity it means fewer than 20 frames contained exactly one face.
+
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
 Missing scores stay missing. They are never written as zero. This notebook does not invent human enjoyment ratings.
@@ -604,6 +606,85 @@ def prefetch_retinaface() -> str:
     return last
 
 
+def drop_imported_vbench() -> None:
+    for name in list(sys.modules):
+        if (
+            name == "vbench2"
+            or name.startswith("vbench2.")
+            or name == "llava"
+            or name.startswith("llava.")
+        ):
+            del sys.modules[name]
+
+
+def use_pytorch_sdpa_for_llava(checkout: Path) -> str:
+    # LLaVA-NeXT defaults to flash_attention_2. Colab's torch has no flash_attn wheel.
+    # SDPA is built into this torch and is the implementation that still answers in words.
+    builder = (
+        checkout / "VBench-2.0" / "vbench2" / "third_party"
+        / "LLaVA_NeXT" / "llava" / "model" / "builder.py"
+    )
+    text = builder.read_text(encoding="utf-8")
+    old = 'attn_implementation="flash_attention_2"'
+    new = 'attn_implementation="sdpa"'
+    if old not in text:
+        if new not in text:
+            raise RuntimeError(f"LLaVA builder has no attention default to change: {builder}")
+    else:
+        builder.write_text(text.replace(old, new, 1), encoding="utf-8")
+    drop_imported_vbench()
+    return "LLaVA attention is sdpa. This torch build has no flash_attn package."
+
+
+def trace_llava_clothes(checkout: Path) -> str:
+    # Print the chat prompt and the decoded answer inside the pinned Human_Clothes function.
+    path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
+    text = path.read_text(encoding="utf-8")
+    if "Human_Clothes PROMPT:" in text and "Human_Clothes OUTPUT:" in text:
+        drop_imported_vbench()
+        return "Human_Clothes prints each prompt and decoded answer"
+    replacements = [
+        (
+            "                prompt_question = conv.get_prompt()\\n"
+            "                input_ids = tokenizer_image_token(prompt_question, tokenizer, IMAGE_TOKEN_INDEX, return_tensors=\\"pt\\").unsqueeze(0).to(device)\\n",
+            "                prompt_question = conv.get_prompt()\\n"
+            "                print(\\"\\\\nHuman_Clothes PROMPT:\\", os.path.basename(str(video_path)), f\\"question {i + 1}/{len(base_question)}\\", flush=True)\\n"
+            "                print(prompt_question, flush=True)\\n"
+            "                input_ids = tokenizer_image_token(prompt_question, tokenizer, IMAGE_TOKEN_INDEX, return_tensors=\\"pt\\").unsqueeze(0).to(device)\\n",
+        ),
+        (
+            "                text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)[0].strip()\\n",
+            "                text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)[0].strip()\\n"
+            "                print(\\"Human_Clothes OUTPUT:\\", text_outputs, flush=True)\\n",
+        ),
+        (
+            "            if not valid:\\n"
+            "                new_item[f\\"video_results\\"]=-1\\n"
+            "                processed_json.append(new_item)\\n",
+            "            if not valid:\\n"
+            "                new_item[f\\"video_results\\"]=-1\\n"
+            "                print(\\"Human_Clothes RECORDED:\\", os.path.basename(str(video_path)), new_item[\\"video_results\\"], flush=True)\\n"
+            "                processed_json.append(new_item)\\n",
+        ),
+        (
+            "            valid_num+=1\\n"
+            "\\n"
+            "            processed_json.append(new_item)\\n",
+            "            valid_num+=1\\n"
+            "            print(\\"Human_Clothes RECORDED:\\", os.path.basename(str(video_path)), new_item[\\"video_results\\"], flush=True)\\n"
+            "\\n"
+            "            processed_json.append(new_item)\\n",
+        ),
+    ]
+    for old, new in replacements:
+        if old not in text:
+            raise RuntimeError("Human_Clothes trace patch did not match vbench2/human_clothes.py")
+        text = text.replace(old, new, 1)
+    path.write_text(text, encoding="utf-8")
+    drop_imported_vbench()
+    return "Human_Clothes will print each LLaVA prompt and decoded answer"
+
+
 def install_anatomy_stack():
     if not INSTALL_SCORING_DEPS:
         return
@@ -829,7 +910,7 @@ def score_one(benchmark, dimension, column, staged_by_id, full_json):
     rejected = []
     for video_id, staged in staged_by_id.items():
         value = lookup_score(parsed, staged.name) if parsed else None
-        if dimension == "Human_Clothes" and value is not None and float(value) < 0:
+        if dimension in {"Human_Clothes", "Human_Identity"} and value is not None and float(value) < 0:
             rejected.append(video_id)
             value = None
         per_video[video_id] = value
@@ -837,10 +918,14 @@ def score_one(benchmark, dimension, column, staged_by_id, full_json):
             missing.append(video_id)
     reason = f"Read per-video custom_input scores from {result_path.name}."
     if rejected:
+        if dimension == "Human_Identity":
+            detail = "fewer than 20 frames contained exactly one face, so identity is not scored"
+        else:
+            detail = "the clip is not one person throughout, so clothes consistency is not scored"
         reason += (
             " Left missing for "
             + ", ".join(rejected)
-            + " because VBench-2.0 returned -1 (the clip is not one person throughout, so clothes consistency is not scored)."
+            + f" because VBench-2.0 returned -1 ({detail})."
         )
     if missing:
         reason += " No score returned for: " + ", ".join(missing) + "."
@@ -894,6 +979,8 @@ else:
         print(ensure_decord())
         print(ensure_huggingface_cli())
         print(prefetch_retinaface())
+        print(use_pytorch_sdpa_for_llava(checkout))
+        print(trace_llava_clothes(checkout))
         install_anatomy_stack()
         full_vbench = checkout / "vbench" / "VBench_full_info.json"
         full_vbench2 = checkout / "VBench-2.0" / "vbench2" / "VBench2_full_info.json"
@@ -923,12 +1010,38 @@ else:
                 continue
             already = pd.to_numeric(metrics[spec["column"]], errors="coerce")
             if already.notna().all():
-                per_dimension[spec["dimension"]] = {
-                    "status": "scored",
-                    "reason": "Reused complete scores already stored in metric_scores.csv.",
-                }
-                print(" ", spec["dimension"], "already scored, left unchanged")
+                reason = "Reused complete scores already stored in metric_scores.csv."
+                negative = already < 0
+                if spec["dimension"] in {"Human_Identity", "Human_Clothes"} and bool(negative.any()):
+                    ids = metrics.loc[negative, "video_id"].astype(str).tolist()
+                    metrics.loc[negative, spec["column"]] = np.nan
+                    if spec["dimension"] == "Human_Identity":
+                        detail = "fewer than 20 frames contained exactly one face, so identity is not scored"
+                    else:
+                        detail = "the clip is not one person throughout, so clothes consistency is not scored"
+                    reason += (
+                        " Left missing for "
+                        + ", ".join(ids)
+                        + f" because VBench-2.0 returned -1 ({detail})."
+                    )
+                    print(" ", spec["dimension"], "already scored;", ", ".join(ids), "left missing (-1)")
+                else:
+                    print(" ", spec["dimension"], "already scored, left unchanged")
+                per_dimension[spec["dimension"]] = {"status": "scored", "reason": reason}
                 continue
+            if spec["dimension"] == "Human_Anatomy":
+                try:
+                    import mmcv  # noqa: F401
+                except Exception as exc:
+                    msg = (
+                        type(exc).__name__
+                        + ": "
+                        + str(exc)
+                        + ". No mmcv wheel matches this PyTorch, so Human_Anatomy was not scored."
+                    )
+                    per_dimension[spec["dimension"]] = {"status": "failed", "reason": msg}
+                    print(" ", spec["dimension"], "FAILED:", msg)
+                    continue
             try:
                 print("Scoring", spec["dimension"], "...")
                 per_video, reason = score_one(
