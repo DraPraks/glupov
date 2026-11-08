@@ -909,54 +909,29 @@ else:
 
 
 def build_association_notebook() -> None:
+    """Write the CSV-only RQ1 association notebook.
+
+    Scoring stays in build_scoring_notebook(). This notebook does not invent ratings.
+    """
     cells: list[dict] = []
     cells.append(md("""
-# RQ1: Video-quality metrics and human enjoyment
+# RQ1 correlations
 
-**Research question:** How strongly are scores on the six VBench 1.0 dimensions associated with human viewers' enjoyment ratings of AI-generated drama clips?
+Spearman association between the six VBench 1.0 scores and clip-level human enjoyment.
 
-Primary analysis: one Spearman correlation per prespecified dimension against mean human enjoyment per clip, with percentile bootstrap 95% confidence intervals, two-sided Monte Carlo permutation tests, and Holm correction across all selected dimensions.
+Reads `data/metric_scores.csv`, keeping `source_id` as text so values such as `001` and `1` stay distinct. When any `source_id` is blank, fills only those blanks from `data/clip_manifest.csv` after rejecting null, duplicate, or conflicting manifest IDs. Reads `data/human_ratings.csv` when that file exists (`video_id`, `rater_id`, `enjoyment` as integers 1–5).
 
-**Data inputs (produced outside this notebook):**
+The correlation family is those six scored columns. Identity, clothes, and anatomy are exclusions, not scored columns, and are not tested. `dynamic_degree` stays in the family; on this pilot it is constant, so Spearman skips it.
 
-- `data/metric_scores.csv` — from `notebooks/vbench_score_clips.ipynb`. On Colab that notebook downloads `rq1_vbench_csvs.zip`; unzip it into this `data/` folder first.
-- `data/human_ratings.csv` — hand-built from Google Docs (`video_id`, `rater_id`, `enjoyment`)
-
-This notebook does not run VBench and does not invent enjoyment ratings. If either CSV is missing, stop after the load cell.
-
-## Scope and assumptions
-- Unit of analysis: clip, not individual rating.
-- Mean enjoyment assumes approximately equally spaced scale points. A median sensitivity analysis is included.
-- Inference assumes independent clips. Repeated `source_id` values stop confirmatory inference (replace provisional `unlabeled_pilot` with real drama IDs first).
-- Clip bootstrap intervals condition on the observed viewer panel.
-- Correlations are not causal effects. A nonsignificant result is not evidence of no association.
-
-`DEMO_MODE = True` builds a labeled synthetic panel so the statistical code can be inspected without study files. Those prints are not findings.
+This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no correlation claims, and removes a prior `rq1_spearman_results.csv`. Non-numeric and infinite scores are rejected; blank scores stay missing. Clips with fewer than 3 ratings are excluded. Spearman needs at least 4 eligible clips. Dimensions with no score variation are skipped. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist.
 """))
-
     cells.append(code("""
 from pathlib import Path
-import json, os, platform, warnings
+import os
 import numpy as np
 import pandas as pd
-import scipy
-from scipy.stats import spearmanr, rankdata
-import statsmodels
+from scipy.stats import rankdata, spearmanr
 from statsmodels.stats.multitest import multipletests
-import matplotlib.pyplot as plt
-from IPython.display import display
-
-DEMO_MODE = False
-
-REPO_ROOT = Path("..").resolve()
-if not (REPO_ROOT / "data").exists() and (Path.cwd() / "data").exists():
-    REPO_ROOT = Path.cwd().resolve()
-DATA_DIR = Path(os.environ.get("RQ1_DATA_DIR", REPO_ROOT / "data")).resolve()
-OUT_DIR = Path(os.environ.get(
-    "RQ1_OUT_DIR",
-    REPO_ROOT / ("rq1_outputs_demo" if DEMO_MODE else "rq1_outputs"),
-)).resolve()
-OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 DIMENSIONS = [
     "vbench_subject_consistency",
@@ -967,309 +942,534 @@ DIMENSIONS = [
     "vbench_imaging_quality",
 ]
 SCALE_MIN, SCALE_MAX = 1, 5
-MIN_RATERS_PER_CLIP = 3
+MIN_RATERS = 3
+MIN_CLIPS = 4
 ALPHA = 0.05
 N_BOOTSTRAP = 2000
 N_PERMUTATIONS = 4999
 SEED = 42
+PROVISIONAL_SOURCE = "unlabeled_pilot"
+RESULTS_NAME = "rq1_spearman_results.csv"
 
-ANALYSIS_READY = False
-print("DATA_DIR =", DATA_DIR)
-print("OUT_DIR =", OUT_DIR)
-"""))
 
-    cells.append(md("""
-## 1. Load data
+def stop(*lines):
+    for line in lines:
+        print(line)
+    print("No correlation claims were written.")
 
-Research mode reads `data/metric_scores.csv` and `data/human_ratings.csv`. Demo mode uses synthetic rows only.
-"""))
 
-    cells.append(code("""
-rng = np.random.default_rng(SEED)
-pd.DataFrame(columns=["video_id", "source_id"] + DIMENSIONS).to_csv(
-    OUT_DIR / "metric_scores_template.csv", index=False
-)
-pd.DataFrame(columns=["video_id", "rater_id", "enjoyment"]).to_csv(
-    OUT_DIR / "human_ratings_template.csv", index=False
-)
+def clear_prior_results():
+    path = output_dir() / RESULTS_NAME
+    if path.is_file():
+        path.unlink()
+        print("Removed prior " + path.name + ".")
 
-metrics_path = DATA_DIR / "metric_scores.csv"
-ratings_path = DATA_DIR / "human_ratings.csv"
 
-if DEMO_MODE:
-    n = 40
-    ids = [f"clip_{i:03d}" for i in range(n)]
-    metrics = pd.DataFrame({"video_id": ids, "source_id": [f"drama_{i:03d}" for i in range(n)]})
-    for dimension in DIMENSIONS:
-        metrics[dimension] = rng.uniform(0, 1, n)
-    latent = (
-        2
-        + 1.5 * metrics[DIMENSIONS[0]].to_numpy()
-        + 0.6 * metrics[DIMENSIONS[1]].to_numpy()
+def repo_root():
+    cwd = Path.cwd().resolve()
+    for candidate in (cwd, cwd.parent):
+        if (candidate / "data" / "metric_scores.csv").is_file():
+            return candidate
+    return cwd
+
+
+def data_dir():
+    override = os.environ.get("RQ1_DATA_DIR")
+    if override:
+        return Path(override).resolve()
+    return repo_root() / "data"
+
+
+def output_dir():
+    override = os.environ.get("RQ1_OUT_DIR")
+    if override:
+        return Path(override).resolve()
+    return repo_root() / "rq1_outputs"
+
+
+def spearman_rho(x, y):
+    result = spearmanr(x, y)
+    stat = getattr(result, "statistic", None)
+    if stat is None:
+        stat = result.correlation
+    return float(stat)
+
+
+def clean_id(series):
+    text = series.astype("string").str.strip()
+    return text.mask(series.isna() | text.isna() | text.eq(""))
+
+
+def validated_manifest(manifest):
+    if not {"video_id", "source_id"}.issubset(manifest.columns):
+        raise ValueError("clip_manifest.csv needs video_id and source_id columns.")
+    video = clean_id(manifest["video_id"])
+    source = clean_id(manifest["source_id"])
+    if video.isna().any():
+        raise ValueError("clip_manifest.csv has a null video_id.")
+    if video.duplicated().any():
+        pairs = pd.DataFrame({
+            "video_id": video.astype(str),
+            "source_id": source.astype("string"),
+        })
+        nunique = pairs.groupby("video_id", dropna=False)["source_id"].nunique(dropna=False)
+        if nunique.gt(1).any():
+            raise ValueError(
+                "clip_manifest.csv has conflicting source_id values for the same video_id."
+            )
+        raise ValueError("clip_manifest.csv has duplicate video_id values.")
+    if source.isna().any():
+        raise ValueError("clip_manifest.csv has a null source_id.")
+    return pd.DataFrame({"video_id": video.astype(str), "source_id": source.astype(str)})
+
+
+def fill_source_ids(metrics, folder):
+    metrics = metrics.copy()
+    if "source_id" not in metrics.columns:
+        metrics["source_id"] = pd.Series(pd.NA, index=metrics.index, dtype="string")
+    metrics["source_id"] = clean_id(metrics["source_id"])
+    missing = metrics["source_id"].isna()
+    if not missing.any():
+        return metrics
+    manifest_path = folder / "clip_manifest.csv"
+    if not manifest_path.is_file():
+        return metrics
+    source = validated_manifest(pd.read_csv(manifest_path, dtype=str))
+    known = metrics.loc[~missing, ["video_id", "source_id"]].merge(
+        source, on="video_id", how="left", suffixes=("_metric", "_manifest")
     )
-    rows = []
-    for j in range(12):
-        bias = rng.normal(0, 0.3)
-        for i, video_id in enumerate(ids):
-            rating = int(np.clip(
-                np.rint(latent[i] + bias + rng.normal(0, 0.8)),
-                SCALE_MIN, SCALE_MAX,
-            ))
-            rows.append((video_id, f"viewer_{j:03d}", rating))
-    ratings = pd.DataFrame(rows, columns=["video_id", "rater_id", "enjoyment"])
-    ANALYSIS_READY = True
-    print("SYNTHETIC DEMO - not research results")
-else:
-    if not metrics_path.is_file():
-        raise FileNotFoundError(
-            f"Missing {metrics_path}. Run notebooks/vbench_score_clips.ipynb first."
+    if len(known):
+        conflict = known["source_id_manifest"].notna() & known["source_id_metric"].ne(
+            known["source_id_manifest"]
         )
-    metrics = pd.read_csv(metrics_path, dtype={"video_id": str, "source_id": str})
-    if not ratings_path.is_file():
-        ANALYSIS_READY = False
-        ratings = pd.DataFrame(columns=["video_id", "rater_id", "enjoyment"])
-        print(
-            f"Missing {ratings_path}. "
-            "Create it from Google Docs with columns video_id,rater_id,enjoyment "
-            "(integers 1-5). Association cells will not run until that file exists."
+        if conflict.any():
+            ids = ", ".join(sorted(known.loc[conflict, "video_id"].astype(str)))
+            raise ValueError(
+                "clip_manifest.csv source_id conflicts with metric_scores.csv for: " + ids
+            )
+    filled = metrics.merge(source, on="video_id", how="left", suffixes=("", "_from_manifest"))
+    take = filled["source_id"].isna() & filled["source_id_from_manifest"].notna()
+    filled.loc[take, "source_id"] = filled.loc[take, "source_id_from_manifest"]
+    print(
+        "Filled "
+        + str(int(take.sum()))
+        + " missing source_id values from "
+        + manifest_path.name
+        + "."
+    )
+    return filled.drop(columns=["source_id_from_manifest"])
+
+
+def load_metrics(folder):
+    path = folder / "metric_scores.csv"
+    if not path.is_file():
+        stop(
+            "Missing " + str(path) + ".",
+            "This notebook only reads CSVs. It does not score clips.",
         )
-        display(metrics.head())
-    else:
-        ratings = pd.read_csv(ratings_path, dtype={"video_id": str, "rater_id": str})
-        ANALYSIS_READY = True
-        display(metrics.head(), ratings.head())
-"""))
+        return None
+    metrics = pd.read_csv(path, dtype={"video_id": str, "source_id": str})
+    if "video_id" not in metrics.columns:
+        raise ValueError(str(path) + " needs a video_id column.")
+    video = clean_id(metrics["video_id"])
+    if video.isna().any() or video.duplicated().any():
+        raise ValueError("metric_scores.csv needs one non-null video_id per clip.")
+    metrics = metrics.copy()
+    metrics["video_id"] = video.astype(str)
+    metrics = fill_source_ids(metrics, folder)
+    print("Loaded " + path.name + ": " + str(len(metrics)) + " clips.")
+    return metrics
 
-    cells.append(code("""
-assert len(DIMENSIONS) > 0 and len(set(DIMENSIONS)) == len(DIMENSIONS)
-assert {"video_id", *DIMENSIONS}.issubset(metrics.columns), "Missing metric columns"
 
-if not ANALYSIS_READY:
-    analysis = pd.DataFrame()
-    print("Aggregation skipped until human_ratings.csv exists.")
-else:
-    assert {"video_id", "rater_id", "enjoyment"}.issubset(ratings.columns), "Missing rating columns"
-    assert not metrics["video_id"].isna().any() and not ratings[["video_id", "rater_id"]].isna().any().any()
-    assert not metrics["video_id"].duplicated().any(), "Metric table must have one row per clip"
-    assert not ratings.duplicated(["video_id", "rater_id"]).any(), "Resolve duplicate viewer-clip records"
-    for col in DIMENSIONS:
-        metrics[col] = pd.to_numeric(metrics[col], errors="raise")
-    ratings["enjoyment"] = pd.to_numeric(ratings["enjoyment"], errors="raise")
-    assert not np.isinf(metrics[DIMENSIONS].to_numpy(dtype=float)).any()
-    assert not np.isinf(ratings["enjoyment"].to_numpy(dtype=float)).any()
-    observed = ratings["enjoyment"].dropna()
-    assert observed.between(SCALE_MIN, SCALE_MAX).all(), "Ratings outside configured scale"
+def parse_score_column(series, name):
+    text = series.astype("string").str.strip()
+    blank = series.isna() | text.isna() | text.eq("")
+    try:
+        values = pd.to_numeric(text.mask(blank), errors="raise")
+    except ValueError:
+        raise ValueError(
+            name + " has non-numeric scores. Blank cells stay missing."
+        )
+    if np.isinf(values.to_numpy(dtype=float)).any():
+        raise ValueError(name + " contains infinite scores.")
+    return values
+
+
+def load_ratings(folder):
+    path = folder / "human_ratings.csv"
+    if not path.is_file():
+        stop(
+            "Missing " + str(path) + ".",
+            "Expected columns: video_id, rater_id, enjoyment (integers 1-5).",
+            "Enjoyment has not been collected. This notebook does not invent ratings.",
+        )
+        return None
+    ratings = pd.read_csv(path, dtype={"video_id": str, "rater_id": str})
+    if ratings.empty:
+        stop(
+            str(path) + " has no enjoyment ratings.",
+            "Expected columns: video_id, rater_id, enjoyment (integers 1-5).",
+            "Enjoyment has not been collected. This notebook does not invent ratings.",
+        )
+        return None
+    missing_cols = {"video_id", "rater_id", "enjoyment"} - set(ratings.columns)
+    if missing_cols:
+        raise ValueError(
+            "human_ratings.csv is missing columns: " + ", ".join(sorted(missing_cols))
+        )
+    if ratings["enjoyment"].dropna().empty:
+        stop(
+            str(path) + " has no enjoyment values.",
+            "Expected integers 1-5. This notebook does not invent ratings.",
+        )
+        return None
+    return ratings
+
+
+def validate_ratings(ratings, metrics):
+    if ratings[["video_id", "rater_id"]].isna().any().any():
+        raise ValueError("video_id and rater_id must be filled on every rating row.")
+    if ratings.duplicated(["video_id", "rater_id"]).any():
+        raise ValueError("Duplicate video_id, rater_id rows. Resolve them before aggregating.")
+    numeric = pd.to_numeric(ratings["enjoyment"], errors="coerce")
+    invalid_text = ratings["enjoyment"].notna() & numeric.isna()
+    present = numeric.dropna()
+    non_integer = (present % 1) != 0
+    out_of_range = ~present.between(SCALE_MIN, SCALE_MAX)
+    if invalid_text.any() or non_integer.any() or out_of_range.any():
+        raise ValueError(
+            "enjoyment must be integers from 1 to 5, or blank if missing. "
+            "This notebook does not impute ratings."
+        )
     unknown = set(ratings["video_id"]) - set(metrics["video_id"])
-    assert not unknown, f"Ratings without metric-table records: {unknown}"
-    print("Missing enjoyment rows excluded:", int(ratings["enjoyment"].isna().sum()))
-    valid_ratings = ratings.dropna(subset=["enjoyment"]).copy()
-    summary = valid_ratings.groupby("video_id")["enjoyment"].agg(
-        human_mean="mean", human_median="median", n_raters="count", human_sd="std"
-    ).reset_index()
-    clips = metrics.merge(summary, on="video_id", how="left", validate="one_to_one")
-    clips["included"] = clips["n_raters"].fillna(0).ge(MIN_RATERS_PER_CLIP)
-    clips.to_csv(OUT_DIR / "clip_summary_and_exclusions.csv", index=False)
-    print("Clips excluded for insufficient ratings:", int((~clips["included"]).sum()))
-    analysis = clips.loc[clips["included"]].copy()
-    assert len(analysis) >= 4, "At least four eligible clips required; substantially more are recommended"
-    if "source_id" in analysis:
-        assert not analysis["source_id"].isna().any(), "Fill source IDs or remove the optional column"
-        assert not analysis["source_id"].duplicated().any(), (
-            "Repeated drama/source IDs: independent-clip inference is inappropriate. "
-            "Replace provisional unlabeled_pilot values with real drama IDs "
-            "(one clip per independent source), or use a cluster-aware design."
+    if unknown:
+        raise ValueError(
+            "Ratings for video_ids that are not in metric_scores.csv: "
+            + ", ".join(sorted(unknown))
         )
-    else:
-        warnings.warn("No source_id supplied: verify clip independence manually.")
-    display(analysis[["n_raters", "human_mean", "human_sd"]].describe())
-"""))
+    checked = ratings.copy()
+    checked["enjoyment"] = numeric
+    return checked
 
-    cells.append(md("""
-## 2. Spearman correlations and uncertainty
 
-Permutation tests shuffle clip-level enjoyment relative to metric scores. The Monte Carlo p-value uses the absolute correlation and a plus-one correction. Bootstrap intervals resample paired clips and recalculate ranks; constant resamples are discarded and counted. These are marginal, not simultaneous, 95% intervals. Missing metric values are handled separately per dimension, with sample sizes reported. Holm correction includes all prespecified dimensions; untestable dimensions enter the correction conservatively as p = 1 and retain missing reported results.
+def clip_table(metrics, ratings):
+    dropped = int(ratings["enjoyment"].isna().sum())
+    valid = ratings.dropna(subset=["enjoyment"])
+    summary = valid.groupby("video_id", as_index=False)["enjoyment"].agg(
+        human_mean="mean",
+        human_median="median",
+        n_raters="count",
+        human_sd="std",
+    )
+    clips = metrics.merge(summary, on="video_id", how="left", validate="one_to_one")
+    clips["included"] = clips["n_raters"].fillna(0).ge(MIN_RATERS)
+    print("Rating rows used: " + str(len(valid)))
+    print("Distinct raters: " + str(valid["rater_id"].nunique()))
+    print("Rating rows with missing enjoyment dropped: " + str(dropped))
+    included = clips.loc[clips["included"]].copy()
+    excluded = int((~clips["included"]).sum())
+    print(
+        "Eligible clips: "
+        + str(len(included))
+        + " (minimum "
+        + str(MIN_RATERS)
+        + " raters)"
+    )
+    print("Clips excluded for too few raters: " + str(excluded))
+    if len(included):
+        view_cols = ["video_id", "n_raters", "human_mean", "human_sd"]
+        if "source_id" in included.columns:
+            view_cols.insert(1, "source_id")
+        view = included[view_cols].copy()
+        view["n_raters"] = view["n_raters"].astype(int)
+        view["human_mean"] = view["human_mean"].map(lambda v: format(v, ".3f"))
+        view["human_sd"] = view["human_sd"].map(
+            lambda v: "NA" if pd.isna(v) else format(v, ".3f")
+        )
+        print(view.to_string(index=False))
+    return included
 
-SciPy recommends considering permutation tests rather than relying on the asymptotic Spearman p-value for small samples: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html
 
-Holm correction documentation: https://www.statsmodels.org/devel/generated/statsmodels.stats.multitest.multipletests.html
-"""))
+def confirmatory_block(included):
+    if "source_id" not in included.columns:
+        return (
+            "Flag: no source_id column on the scored clips.",
+            "Confirmatory inference stays off until real drama IDs exist.",
+        )
+    raw = included["source_id"]
+    if raw.isna().any():
+        return (
+            "Flag: source_id is missing for at least one eligible clip.",
+            "Confirmatory inference stays off until real drama IDs exist.",
+        )
+    sources = raw.astype(str).str.strip()
+    if sources.eq("").any():
+        return (
+            "Flag: source_id is missing for at least one eligible clip.",
+            "Confirmatory inference stays off until real drama IDs exist.",
+        )
+    n_pilot = int(sources.eq(PROVISIONAL_SOURCE).sum())
+    if n_pilot:
+        return (
+            "Flag: source_id "
+            + PROVISIONAL_SOURCE
+            + " on "
+            + str(n_pilot)
+            + " of "
+            + str(len(sources))
+            + " eligible clips ("
+            + str(int(sources.nunique()))
+            + " distinct source_id value(s)).",
+            "Drama grouping is unknown, so these clips are not an independent set.",
+            "Confirmatory inference stays off until real drama IDs exist.",
+        )
+    if sources.duplicated().any():
+        repeated = sorted(sources[sources.duplicated(keep=False)].unique())
+        return (
+            "Flag: repeated source_id values: " + ", ".join(repeated) + ".",
+            "Confirmatory clip-level inference stays off until each eligible clip has its own drama ID, or the analysis is cluster-aware.",
+        )
+    return None
 
-    cells.append(code("""
+
 def association(x, y, seed):
     rng = np.random.default_rng(seed)
-    x, y = np.asarray(x, float), np.asarray(y, float)
+    x = np.asarray(x, float)
+    y = np.asarray(y, float)
     keep = np.isfinite(x) & np.isfinite(y)
     x, y = x[keep], y[keep]
-    result = dict(
-        n_clips=len(x), rho=np.nan, ci_low=np.nan, ci_high=np.nan,
-        p_permutation=np.nan, valid_bootstraps=0, status="untestable",
-    )
-    if len(x) < 4 or len(np.unique(x)) < 2 or len(np.unique(y)) < 2:
-        return result
-    rx, ry = rankdata(x), rankdata(y)
-    rx, ry = rx - rx.mean(), ry - ry.mean()
-    denominator = np.linalg.norm(rx) * np.linalg.norm(ry)
+    out = {
+        "n": int(len(x)),
+        "rho": np.nan,
+        "ci_low": np.nan,
+        "ci_high": np.nan,
+        "p_raw": np.nan,
+        "valid_bootstraps": 0,
+        "status": "untestable",
+    }
+    if len(x) == 0:
+        out["status"] = "all_missing"
+        return out
+    if len(x) < MIN_CLIPS:
+        out["status"] = "too_few_clips"
+        return out
+    if np.unique(x).size < 2 or np.unique(y).size < 2:
+        out["status"] = "no_variation"
+        return out
+    rx = rankdata(x)
+    ry = rankdata(y)
+    rx = rx - rx.mean()
+    ry = ry - ry.mean()
+    denominator = float(np.linalg.norm(rx) * np.linalg.norm(ry))
     rho = float(rx @ ry / denominator)
     extreme = 0
     for _ in range(N_PERMUTATIONS):
-        perm_rho = rx @ rng.permutation(ry) / denominator
+        perm_rho = float(rx @ rng.permutation(ry) / denominator)
         extreme += abs(perm_rho) >= abs(rho) - 1e-12
     boot = []
     for _ in range(N_BOOTSTRAP):
         idx = rng.integers(0, len(x), len(x))
         if np.unique(x[idx]).size > 1 and np.unique(y[idx]).size > 1:
-            boot.append(float(spearmanr(x[idx], y[idx]).statistic))
-    low, high = (
-        np.quantile(boot, [0.025, 0.975]) if len(boot) >= 100 else (np.nan, np.nan)
+            boot.append(spearman_rho(x[idx], y[idx]))
+    if len(boot) >= 100:
+        ci_low, ci_high = np.quantile(boot, [0.025, 0.975])
+    else:
+        ci_low, ci_high = np.nan, np.nan
+    out.update(
+        rho=rho,
+        ci_low=float(ci_low),
+        ci_high=float(ci_high),
+        p_raw=(extreme + 1) / (N_PERMUTATIONS + 1),
+        valid_bootstraps=len(boot),
+        status="tested",
     )
-    result.update(
-        rho=rho, ci_low=low, ci_high=high,
-        p_permutation=(extreme + 1) / (N_PERMUTATIONS + 1),
-        valid_bootstraps=len(boot), status="tested",
-    )
-    return result
+    return out
 
-if ANALYSIS_READY:
-    results = pd.DataFrame([
-        dict(dimension=d, **association(analysis[d], analysis["human_mean"], SEED + i))
-        for i, d in enumerate(DIMENSIONS)
-    ])
-    testable = results["status"].eq("tested")
-    reject, adjusted, _, _ = multipletests(
-        results["p_permutation"].fillna(1), alpha=ALPHA, method="holm"
-    )
-    results["p_holm"] = np.where(testable, adjusted, np.nan)
-    results["reject_holm"] = testable & reject
-    results["abs_rho"] = results["rho"].abs()
-    results = results.sort_values("abs_rho", ascending=False, na_position="last")
-    results.to_csv(OUT_DIR / "rq1_spearman_results.csv", index=False)
-    display(results.drop(columns="abs_rho").round(4))
-else:
-    results = pd.DataFrame()
-    print("Spearman cells skipped: waiting for data/human_ratings.csv")
-"""))
 
-    cells.append(md("""
-## 3. Plots and median sensitivity analysis
+def median_rho(x, y):
+    x = np.asarray(x, float)
+    y = np.asarray(y, float)
+    keep = np.isfinite(x) & np.isfinite(y)
+    x, y = x[keep], y[keep]
+    if len(x) < MIN_CLIPS or np.unique(x).size < 2 or np.unique(y).size < 2:
+        return np.nan
+    return spearman_rho(x, y)
 
-Sensitivity correlations are descriptive checks, not a second set of confirmatory tests.
-"""))
 
-    cells.append(code("""
-if not ANALYSIS_READY:
-    print("Plots skipped: waiting for data/human_ratings.csv")
-else:
-    plot_data = results.dropna(subset=["rho"]).iloc[::-1]
-    if len(plot_data):
-        fig, ax = plt.subplots(figsize=(9, max(3, len(plot_data) * 0.5)))
-        for i, row in enumerate(plot_data.itertuples()):
-            color = "tab:blue" if row.reject_holm else "gray"
-            ax.plot([row.ci_low, row.ci_high], [i, i], color=color)
-            ax.scatter(row.rho, i, color=color)
-        ax.set_yticks(range(len(plot_data)), plot_data["dimension"])
-        ax.axvline(0, color="black", lw=0.8)
-        ax.set(
-            xlim=(-1.05, 1.05),
-            xlabel="Spearman rho (marginal bootstrap 95% CI)",
-            title=("DEMO: " if DEMO_MODE else "") + "Metric-enjoyment associations",
+def fmt(value, digits):
+    if pd.isna(value):
+        return "NA"
+    return format(float(value), "." + str(digits) + "f")
+
+
+def analyze(included):
+    n_eligible = len(included)
+    rows = []
+    p_for_holm = []
+    for i, dimension in enumerate(DIMENSIONS):
+        if dimension not in included.columns:
+            rows.append({
+                "dimension": dimension,
+                "n": 0,
+                "n_missing": n_eligible,
+                "missing_fraction": 1.0,
+                "rho": np.nan,
+                "ci_low": np.nan,
+                "ci_high": np.nan,
+                "p_raw": np.nan,
+                "p_holm": np.nan,
+                "rho_median": np.nan,
+                "valid_bootstraps": 0,
+                "status": "missing_column",
+                "reject_holm": False,
+                "n_eligible": n_eligible,
+            })
+            p_for_holm.append(1.0)
+            continue
+        x = parse_score_column(included[dimension], dimension)
+        n_missing = int(x.isna().sum())
+        result = association(x, included["human_mean"], SEED + i)
+        result.update(
+            dimension=dimension,
+            n_missing=n_missing,
+            missing_fraction=(n_missing / n_eligible) if n_eligible else np.nan,
+            rho_median=median_rho(x, included["human_median"]) if result["status"] == "tested" else np.nan,
+            n_eligible=n_eligible,
+            p_holm=np.nan,
+            reject_holm=False,
         )
-        fig.tight_layout()
-        fig.savefig(OUT_DIR / "rq1_correlations.png", dpi=180, bbox_inches="tight")
-        plt.show()
+        rows.append(result)
+        p_for_holm.append(result["p_raw"] if result["status"] == "tested" else 1.0)
+    _reject, adjusted, _a, _b = multipletests(p_for_holm, alpha=ALPHA, method="holm")
+    for row, p_adj, reject in zip(rows, adjusted, _reject):
+        if row["status"] == "tested":
+            row["p_holm"] = float(p_adj)
+            row["reject_holm"] = bool(reject)
+    return pd.DataFrame(rows)
 
-    sensitivity = []
-    for d in DIMENSIONS:
-        subset = analysis[[d, "human_median"]].dropna()
-        rho = (
-            spearmanr(subset[d], subset["human_median"]).statistic
-            if (
-                len(subset) >= 4
-                and subset[d].nunique() > 1
-                and subset["human_median"].nunique() > 1
-            )
-            else np.nan
-        )
-        sensitivity.append({"dimension": d, "n_clips": len(subset), "rho_human_median": rho})
-    sensitivity = pd.DataFrame(sensitivity)
-    sensitivity.to_csv(OUT_DIR / "median_sensitivity.csv", index=False)
-    display(sensitivity)
 
-    fig, axes = plt.subplots(len(DIMENSIONS), 1, figsize=(7, 3 * len(DIMENSIONS)), squeeze=False)
-    for ax, d in zip(axes.flat, DIMENSIONS):
-        ax.scatter(analysis[d], analysis["human_mean"], alpha=0.7)
-        ax.set(xlabel=d, ylabel="Mean human enjoyment", ylim=(SCALE_MIN - 0.1, SCALE_MAX + 0.1))
-    fig.suptitle("SYNTHETIC DEMO" if DEMO_MODE else "Clip-level observations")
-    fig.tight_layout()
-    fig.savefig(OUT_DIR / "rq1_scatterplots.png", dpi=180, bbox_inches="tight")
-    plt.show()
-"""))
-
-    cells.append(code("""
-metadata = {
-    "demo_mode": DEMO_MODE,
-    "analysis_ready": ANALYSIS_READY,
-    "dimensions": DIMENSIONS,
-    "scale": [SCALE_MIN, SCALE_MAX],
-    "minimum_raters": MIN_RATERS_PER_CLIP,
-    "alpha": ALPHA,
-    "bootstrap_resamples": N_BOOTSTRAP,
-    "permutations": N_PERMUTATIONS,
-    "seed": SEED,
-    "eligible_clips": int(len(analysis)) if ANALYSIS_READY else 0,
-    "data_dir": str(DATA_DIR),
-    "metrics_csv": str(metrics_path if not DEMO_MODE else "synthetic"),
-    "ratings_csv": str(ratings_path if not DEMO_MODE else "synthetic"),
-    "python": platform.python_version(),
-    "numpy": np.__version__,
-    "pandas": pd.__version__,
-    "scipy": scipy.__version__,
-    "statsmodels": statsmodels.__version__,
-}
-(OUT_DIR / "analysis_settings.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-
-if not ANALYSIS_READY:
-    report = (
-        "RQ1 association waiting for data/human_ratings.csv.\\n"
-        "metric_scores.csv is loaded from the VBench scoring notebook when present.\\n"
-        "Add Google Docs ratings manually, then rerun this notebook."
+def print_results(results):
+    n_eligible = int(results["n_eligible"].iloc[0]) if len(results) else 0
+    print("Eligible clips N = " + str(n_eligible))
+    print(
+        "Seed = "
+        + str(SEED)
+        + ". Resamples: "
+        + str(N_BOOTSTRAP)
+        + " bootstrap, "
+        + str(N_PERMUTATIONS)
+        + " permutations."
     )
-else:
-    lines = [
-        "SYNTHETIC DEMO - NOT STUDY FINDINGS" if DEMO_MODE else "RQ1 analysis summary",
-        f"Eligible clips: {len(analysis)}; mean enjoyment aggregated per clip.",
-        "Two-sided clip permutation p-values; Holm correction across selected dimensions.",
-        "Intervals are marginal paired-clip bootstrap intervals, conditional on the observed viewer panel.",
+    print("Tested dimensions:")
+    tested = results.loc[results["status"].eq("tested")]
+    if tested.empty:
+        print("(none)")
+    for row in tested.itertuples(index=False):
+        print(
+            row.dimension
+            + "  n="
+            + str(int(row.n))
+            + "  missing="
+            + str(int(row.n_missing))
+            + "/"
+            + str(n_eligible)
+            + "  rho="
+            + fmt(row.rho, 3)
+            + "  CI=["
+            + fmt(row.ci_low, 3)
+            + ", "
+            + fmt(row.ci_high, 3)
+            + "]  p_raw="
+            + fmt(row.p_raw, 4)
+            + "  p_holm="
+            + fmt(row.p_holm, 4)
+            + "  rho_median="
+            + fmt(row.rho_median, 3)
+        )
+    print("Skipped dimensions:")
+    skipped = results.loc[~results["status"].eq("tested")]
+    if skipped.empty:
+        print("(none)")
+    for row in skipped.itertuples(index=False):
+        print(
+            row.dimension
+            + "  n="
+            + str(int(row.n))
+            + "  missing="
+            + str(int(row.n_missing))
+            + "/"
+            + str(n_eligible)
+            + "  status="
+            + row.status
+        )
+    print(
+        "Holm family size = "
+        + str(len(DIMENSIONS))
+        + " (untestable dimensions enter as p = 1). "
+        + "CIs are marginal paired-clip bootstrap 95% intervals. "
+        + "p_raw is a two-sided permutation p. "
+        + "rho_median is a sensitivity check, not a second confirmatory test. "
+        + "Associations are not causal."
+    )
+
+
+def write_results(results):
+    folder = output_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / RESULTS_NAME
+    columns = [
+        "dimension",
+        "n_eligible",
+        "n",
+        "n_missing",
+        "missing_fraction",
+        "rho",
+        "ci_low",
+        "ci_high",
+        "p_raw",
+        "p_holm",
+        "rho_median",
+        "status",
+        "valid_bootstraps",
+        "reject_holm",
     ]
-    for row in results.itertuples():
-        if row.status == "tested":
-            lines.append(
-                f"{row.dimension}: rho={row.rho:.3f}, 95% CI [{row.ci_low:.3f}, {row.ci_high:.3f}], "
-                f"Holm p={row.p_holm:.4f}, n={row.n_clips}."
-            )
-        else:
-            lines.append(f"{row.dimension}: untestable (insufficient data or no variation).")
-    lines += [
-        "Associations are not causal effects. Nonsignificance is not evidence of no association.",
-        "Largest absolute sample correlation does not prove a dimension is stronger than all others.",
-    ]
-    report = "\\n".join(lines)
+    results[columns].to_csv(path, index=False)
+    print("Wrote " + str(path))
 
-(OUT_DIR / "rq1_summary.txt").write_text(report, encoding="utf-8")
-print(report)
+
+def main():
+    clear_prior_results()
+    folder = data_dir()
+    print("DATA_DIR = " + str(folder))
+    metrics = load_metrics(folder)
+    if metrics is None:
+        return
+    ratings = load_ratings(folder)
+    if ratings is None:
+        return
+    ratings = validate_ratings(ratings, metrics)
+    included = clip_table(metrics, ratings)
+    if len(included) < MIN_CLIPS:
+        stop(
+            "Spearman needs at least "
+            + str(MIN_CLIPS)
+            + " eligible clips; found "
+            + str(len(included))
+            + ".",
+            "Confirmatory inference was not run.",
+        )
+        return
+    blocked = confirmatory_block(included)
+    if blocked:
+        stop(*blocked)
+        return
+    results = analyze(included)
+    print_results(results)
+    write_results(results)
+
+
+main()
 """))
-
-    cells.append(md("""
-## Reporting checklist
-
-Report clip and viewer counts, source sampling, scale anchors, metric versions/configurations, chosen dimensions and rationale, missingness/exclusions, per-dimension sample sizes, rho and confidence intervals, Holm-adjusted p-values, and limitations of clip independence and viewer sampling.
-
-Example sentence (replace placeholders; never copy demo estimates):
-
-> Across N eligible clips, dimension X was positively associated with mean viewer enjoyment (Spearman rho = R, marginal bootstrap 95% CI [L, U], Holm-adjusted permutation p = P). This association does not establish causation or an independent contribution beyond other dimensions.
-
-Scoring: `notebooks/vbench_score_clips.ipynb`. Ratings: manual `data/human_ratings.csv` from Google Docs.
-"""))
-
     write_nb(NB_DIR / "rq1-aidrama.ipynb", cells)
 
 
