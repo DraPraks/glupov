@@ -505,24 +505,28 @@ def load_saved_metrics():
 
 
 def ensure_huggingface_cli():
-    if shutil.which("huggingface-cli"):
-        return "huggingface-cli already on PATH"
+    # Colab's huggingface-cli is a stub that exits before any download. VBench calls that name.
     bindir = Path.home() / ".local" / "bin"
     bindir.mkdir(parents=True, exist_ok=True)
     script = bindir / "huggingface-cli"
     script.write_text(
         "#!/usr/bin/env python\\n"
         "import sys\\n"
-        "try:\\n"
-        "    from huggingface_hub.commands.huggingface_cli import main\\n"
-        "except ImportError:\\n"
-        "    from huggingface_hub.cli.huggingface_cli import main\\n"
-        "raise SystemExit(main())\\n",
+        "from huggingface_hub import snapshot_download\\n"
+        "args = sys.argv[1:]\\n"
+        "if len(args) < 2 or args[0] != 'download':\\n"
+        "    raise SystemExit('huggingface-cli shim only implements: download <repo> --local-dir <dir>')\\n"
+        "repo = args[1]\\n"
+        "local_dir = args[args.index('--local-dir') + 1]\\n"
+        "repo_type = 'model'\\n"
+        "if '--repo-type' in args:\\n"
+        "    repo_type = args[args.index('--repo-type') + 1]\\n"
+        "snapshot_download(repo_id=repo, repo_type=repo_type, local_dir=local_dir)\\n",
         encoding="utf-8",
     )
     script.chmod(0o755)
     os.environ["PATH"] = str(bindir) + os.pathsep + os.environ.get("PATH", "")
-    return "huggingface-cli shim installed"
+    return "huggingface-cli shim is first on PATH and downloads public repos without a token"
 
 
 def install_core_packages():
@@ -533,7 +537,8 @@ def install_core_packages():
         "opencv-python", "pyyaml", "easydict", "omegaconf", "tqdm",
         "einops", "timm", "scikit-image", "Pillow", "fvcore", "iopath",
         "ftfy", "regex", "openai-clip", "pyiqa", "gdown",
-        "imageio", "imageio-ffmpeg", "huggingface_hub", "transformers",
+        "imageio", "imageio-ffmpeg", "huggingface_hub", "transformers==4.51.0",
+        "tokenizers>=0.21,<0.22",
         "accelerate", "sentencepiece", "safetensors", "fairscale", "scenedetect",
     ]
     skipped = []
@@ -555,6 +560,48 @@ def install_core_packages():
     except Exception as exc:
         print("retinaface_pytorch install failed. Human_Identity will record the import error.")
         print(exc)
+    identity_deps = ["albumentations==1.4.18", "opencv-python-headless<4.11"]
+    try:
+        if pip_would_change_torch(identity_deps):
+            print("Skipping albumentations because pip would replace torch.")
+        else:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", *identity_deps])
+    except Exception as exc:
+        print("albumentations install failed. Human_Identity will record the import error.")
+        print(exc)
+
+
+def add_llava_import_root(checkout: Path) -> Path:
+    llava_root = checkout / "VBench-2.0" / "vbench2" / "third_party" / "LLaVA_NeXT"
+    if not llava_root.is_dir():
+        raise FileNotFoundError(f"Bundled LLaVA-NeXT is missing: {llava_root}")
+    entry = str(llava_root)
+    if entry not in sys.path:
+        sys.path.insert(0, entry)
+    return llava_root
+
+
+def prefetch_retinaface() -> str:
+    import torch
+    url = "https://github.com/ternaus/retinaface/releases/download/0.01/retinaface_resnet50_2020-07-20-f168fae3c.zip"
+    dest = Path(torch.hub.get_dir()) / "checkpoints" / "retinaface_resnet50_2020-07-20-f168fae3c.zip"
+    if dest.is_file() and dest.stat().st_size > 1_000_000:
+        return f"retinaface weights already at {dest}"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    partial = dest.with_suffix(dest.suffix + ".partial")
+    last = "not attempted"
+    for attempt in range(1, 4):
+        proc = subprocess.run(
+            ["curl", "-L", "--retry", "5", "--retry-all-errors", "-o", str(partial), url],
+            capture_output=True, text=True,
+        )
+        if proc.returncode == 0 and partial.is_file() and partial.stat().st_size > 1_000_000:
+            partial.replace(dest)
+            return f"retinaface weights downloaded to {dest}"
+        last = (proc.stderr or proc.stdout or "curl failed")[-400:]
+        print(f"retinaface download attempt {attempt} failed:", last)
+    print("Human_Identity will try torch.hub next, which hit HTTP 504 on the last Colab run.")
+    return last
 
 
 def install_anatomy_stack():
@@ -838,6 +885,7 @@ else:
         for entry in (str(checkout / "VBench-2.0"), str(checkout)):
             if entry not in sys.path:
                 sys.path.insert(0, entry)
+        print("LLaVA-NeXT import root", add_llava_import_root(checkout))
         os.environ["VBENCH_CACHE_DIR"] = str(CACHE_DIR / "weights")
         os.environ["VBENCH2_CACHE_DIR"] = str(CACHE_DIR / "weights")
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -845,6 +893,7 @@ else:
         install_core_packages()
         print(ensure_decord())
         print(ensure_huggingface_cli())
+        print(prefetch_retinaface())
         install_anatomy_stack()
         full_vbench = checkout / "vbench" / "VBench_full_info.json"
         full_vbench2 = checkout / "VBench-2.0" / "vbench2" / "VBench2_full_info.json"
