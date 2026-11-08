@@ -66,7 +66,7 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 
 A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so the six finished VBench columns are not scored again.
 
-`Human_Clothes` loads LLaVA with PyTorch SDPA. This Colab torch build has no `flash_attn` package, and SDPA is the attention implementation that still answers in real words. Each question sent to LLaVA is printed, then the decoded answer. Before reading frames it sets Decord's bridge back to native, because `Human_Identity` switches that process-wide bridge to torch and `asnumpy()` then fails. A VBench result of `-1` is left blank: for clothes it means the clip is not one person throughout, and for identity it means fewer than 20 frames contained exactly one face.
+`Human_Clothes` loads LLaVA with PyTorch SDPA. This Colab torch build has no `flash_attn` package, and SDPA is the attention implementation that still answers in real words. Each question sent to LLaVA is printed, then the decoded answer. Before reading frames it sets Decord's bridge back to native, because `Human_Identity` switches that process-wide bridge to torch and `asnumpy()` then fails. A VBench result of `-1` is left blank: for clothes it means the clip is not one person throughout, and for identity it means fewer than 20 frames contained exactly one face. If every clothes clip is `-1`, the average is skipped instead of dividing by zero.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -687,6 +687,35 @@ def fix_clothes_decord_bridge(checkout: Path) -> str:
     return "Human_Clothes resets Decord to native before asnumpy()"
 
 
+def keep_clothes_results_when_none_qualify(checkout: Path) -> str:
+    # Every clip can be -1. VBench then divides the empty total by zero and
+    # discards the per-video results. Keep those results and skip the average.
+    path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
+    text = path.read_text(encoding="utf-8")
+    old_return = "    return final_score/valid_num, processed_json\\n"
+    new_return = (
+        "    if valid_num == 0:\\n"
+        "        return None, processed_json\\n"
+        "    return final_score/valid_num, processed_json\\n"
+    )
+    old_avg = "    all_results = score/num\\n"
+    new_avg = (
+        "    if num == 0:\\n"
+        "        all_results = None\\n"
+        "    else:\\n"
+        "        all_results = score/num\\n"
+    )
+    if "if valid_num == 0:" in text and "if num == 0:" in text:
+        drop_imported_vbench()
+        return "Human_Clothes keeps per-video results when every clip is -1"
+    if old_return not in text or old_avg not in text:
+        raise RuntimeError("human_clothes.py has no empty-average division to guard")
+    text = text.replace(old_return, new_return, 1).replace(old_avg, new_avg, 1)
+    path.write_text(text, encoding="utf-8")
+    drop_imported_vbench()
+    return "Human_Clothes no longer divides by zero when every clip is -1"
+
+
 def trace_llava_clothes(checkout: Path) -> str:
     # Print the chat prompt and the decoded answer inside the pinned Human_Clothes function.
     path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
@@ -1032,6 +1061,7 @@ else:
         print(prefetch_retinaface())
         print(use_pytorch_sdpa_for_llava(checkout))
         print(fix_clothes_decord_bridge(checkout))
+        print(keep_clothes_results_when_none_qualify(checkout))
         print(trace_llava_clothes(checkout))
         install_anatomy_stack()
         full_vbench = checkout / "vbench" / "VBench_full_info.json"
