@@ -49,10 +49,10 @@ def build_scoring_notebook() -> None:
 
 Run this on **Colab, A100 GPU, standard memory**. That runtime is about 40 GB of GPU memory and 84 GB of system RAM.
 
-One raw clip is expanded to about 23 GB of frames in system RAM before VBench resizes it. `Human_Clothes` then loads LLaVA-Video-7B in bf16 (about 15 GB of weights plus a 64-frame video). Those two facts pick the machine:
+One raw clip is expanded to about 23 GB of frames in system RAM before VBench resizes it. That picks the machine:
 
-- **A100, standard memory.** Enough RAM for the frames and enough GPU memory for LLaVA. Leave High-RAM off; that only spends more compute units.
-- **L4** has about 53 GB of RAM, so the frames fit, but 22 GB of GPU memory is too tight for LLaVA-Video-7B.
+- **A100, standard memory.** Enough RAM for the frames. Leave High-RAM off; that only spends more compute units.
+- **L4** has about 53 GB of RAM, which is short of the frame buffer.
 - **G4** is an RTX PRO 6000 Blackwell. Same generation as the RTX 5060 this already failed on. VBench's CUDA stack is not built for it.
 - **H100** runs, and costs several times the A100 for six short clips.
 - **Kaggle T4 x2** does not pool into one 32 GB GPU for these metrics, and a TPU cannot run this PyTorch code.
@@ -64,7 +64,9 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 3. Runtime → Run all.
 4. When the last cell finishes, it downloads `rq1_vbench_csvs.zip`. Put those CSVs in the repo's `data/` folder. Add `human_ratings.csv` from Google Docs later, then run `rq1-aidrama.ipynb`.
 
-A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so the six finished VBench columns are not scored again.
+This notebook scores the six VBench 1.0 dimensions that apply to these clips: subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality. A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so those columns are not scored again.
+
+`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. `Human_Anatomy` is not scored because `mmcv` has no wheel for this Colab PyTorch. Diversity and Multi-View Consistency need more than one clip per prompt. Those five are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -73,7 +75,7 @@ Missing scores stay missing. They are never written as zero. This notebook does 
 Outputs:
 
 - `clip_manifest.csv` — `video_id`, `path`, `source_id`, `duration`, `source_id_basis`
-- `metric_scores.csv` — one row per clip, versioned VBench / VBench-2.0 columns
+- `metric_scores.csv` — one row per clip, the six VBench 1.0 columns
 - `dimension_applicability.csv` — what ran, and why a dimension was skipped
 """))
 
@@ -143,8 +145,8 @@ def require_colab_a100() -> None:
     if ram_gb < 60 or vram_gb < 35:
         raise RuntimeError(
             f"This runtime has {vram_gb:.0f} GB of GPU memory and {ram_gb:.0f} GB of system RAM. "
-            "A full-resolution clip needs about 23 GB of system RAM, and Human_Clothes needs "
-            "about 40 GB of GPU memory so LLaVA-Video-7B fits. " + A100_SWITCH
+            "A full-resolution clip needs about 23 GB of system RAM before VBench resizes it. "
+            + A100_SWITCH
         )
     if vram_gb >= 70:
         print("Larger than a standard A100. Scoring will run. Standard A100 spends fewer compute units.")
@@ -221,7 +223,7 @@ VBENCH_DIMENSIONS = [
     "aesthetic_quality",
     "imaging_quality",
 ]
-VBENCH2_DIMENSIONS = ["Human_Anatomy", "Human_Identity", "Human_Clothes"]
+VBENCH2_DIMENSIONS = []
 
 def metric_column(benchmark: str, dimension: str) -> str:
     if benchmark == "vbench":
@@ -236,10 +238,43 @@ DIMENSION_SPECS = [
     for name in VBENCH2_DIMENSIONS
 ]
 DIMENSIONS = [spec["column"] for spec in DIMENSION_SPECS]
-EXCLUDED_SINGLE_CLIP = [
+EXCLUDED_DIMENSIONS = [
+    {
+        "benchmark": "vbench2",
+        "dimension": "Human_Identity",
+        "single_clip": True,
+        "status": "not_applicable_multi_person",
+        "reason": (
+            "VBench-2.0 anchors identity to one face in the opening frame and "
+            "drops a clip with fewer than 20 single-face frames. "
+            "These drama clips show several people, so the dimension is not scored."
+        ),
+    },
+    {
+        "benchmark": "vbench2",
+        "dimension": "Human_Clothes",
+        "single_clip": True,
+        "status": "not_applicable_multi_person",
+        "reason": (
+            "VBench-2.0 asks whether only one person is present throughout and "
+            "does not score clothes otherwise. These drama clips show several people."
+        ),
+    },
+    {
+        "benchmark": "vbench2",
+        "dimension": "Human_Anatomy",
+        "single_clip": True,
+        "status": "excluded",
+        "reason": (
+            "Human Anatomy looks at each person, but mmcv has no wheel for this "
+            "Colab PyTorch, so the dimension cannot be scored here."
+        ),
+    },
     {
         "benchmark": "vbench2",
         "dimension": "Diversity",
+        "single_clip": False,
+        "status": "not_applicable_single_clip",
         "reason": (
             "VBench-2.0 custom input needs >=20 videos for one prompt "
             "(prompt-index.mp4, index 0..19). One raw clip has no Diversity score."
@@ -248,6 +283,8 @@ EXCLUDED_SINGLE_CLIP = [
     {
         "benchmark": "vbench2",
         "dimension": "Multi-View_Consistency",
+        "single_clip": False,
+        "status": "not_applicable_single_clip",
         "reason": (
             "VBench-2.0 custom input expects multiple views in their own folder. "
             "One raw clip is not a multi-view set."
@@ -400,13 +437,13 @@ def applicability_table(per_dimension: dict | None = None) -> pd.DataFrame:
                 "Official custom_input scores one raw video on this dimension.",
             ),
         })
-    for spec in EXCLUDED_SINGLE_CLIP:
+    for spec in EXCLUDED_DIMENSIONS:
         rows.append({
             "dimension": spec["dimension"],
             "column_name": "",
             "benchmark": spec["benchmark"],
-            "custom_input_single_clip": False,
-            "status": "not_applicable_single_clip",
+            "custom_input_single_clip": spec["single_clip"],
+            "status": spec["status"],
             "reason": spec["reason"],
         })
     return pd.DataFrame(rows)
@@ -504,27 +541,6 @@ def load_saved_metrics():
     return found[0][2]
 
 
-def ensure_huggingface_cli():
-    if shutil.which("huggingface-cli"):
-        return "huggingface-cli already on PATH"
-    bindir = Path.home() / ".local" / "bin"
-    bindir.mkdir(parents=True, exist_ok=True)
-    script = bindir / "huggingface-cli"
-    script.write_text(
-        "#!/usr/bin/env python\\n"
-        "import sys\\n"
-        "try:\\n"
-        "    from huggingface_hub.commands.huggingface_cli import main\\n"
-        "except ImportError:\\n"
-        "    from huggingface_hub.cli.huggingface_cli import main\\n"
-        "raise SystemExit(main())\\n",
-        encoding="utf-8",
-    )
-    script.chmod(0o755)
-    os.environ["PATH"] = str(bindir) + os.pathsep + os.environ.get("PATH", "")
-    return "huggingface-cli shim installed"
-
-
 def install_core_packages():
     if not INSTALL_SCORING_DEPS:
         print("RQ1_INSTALL_DEPS=0: using packages already installed.")
@@ -533,7 +549,8 @@ def install_core_packages():
         "opencv-python", "pyyaml", "easydict", "omegaconf", "tqdm",
         "einops", "timm", "scikit-image", "Pillow", "fvcore", "iopath",
         "ftfy", "regex", "openai-clip", "pyiqa", "gdown",
-        "imageio", "imageio-ffmpeg", "huggingface_hub", "transformers",
+        "imageio", "imageio-ffmpeg", "huggingface_hub", "transformers==4.51.0",
+        "tokenizers>=0.21,<0.22",
         "accelerate", "sentencepiece", "safetensors", "fairscale", "scenedetect",
     ]
     skipped = []
@@ -545,42 +562,6 @@ def install_core_packages():
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
     if skipped:
         print("Packages left unchanged:", ", ".join(skipped))
-    try:
-        if not pip_would_change_torch(["retinaface_pytorch==0.0.8"]):
-            subprocess.check_call([
-                sys.executable, "-m", "pip", "install", "retinaface_pytorch==0.0.8", "--no-deps",
-            ])
-        else:
-            print("Skipping retinaface_pytorch because pip would replace torch.")
-    except Exception as exc:
-        print("retinaface_pytorch install failed. Human_Identity will record the import error.")
-        print(exc)
-
-
-def install_anatomy_stack():
-    if not INSTALL_SCORING_DEPS:
-        return
-    import torch
-    version = torch.__version__.split("+")[0]
-    torch_tag = ".".join(version.split(".")[:2])
-    cuda = getattr(torch.version, "cuda", None) or ""
-    cu_tag = "cu" + "".join(cuda.split(".")[:2]) if cuda else ""
-    index = f"https://download.openmmlab.com/mmcv/dist/{cu_tag}/torch{torch_tag}/index.html"
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "mmengine", "mmdet", "mmyolo"])
-        if pip_would_change_torch(["mmcv==2.2.0"]):
-            print("Skipping mmcv==2.2.0 because it would replace the CUDA torch build.")
-            print("Human_Anatomy will be left missing if its import needs that wheel.")
-            return
-        subprocess.check_call([
-            sys.executable, "-m", "pip", "install", "mmcv==2.2.0",
-            "-f", index, "--no-cache-dir",
-        ])
-        print("Human_Anatomy packages installed from", index)
-    except Exception as exc:
-        print("Human_Anatomy packages were not installed.")
-        print(exc)
-        print("The other dimensions still run.")
 
 
 def ensure_vbench_checkout():
@@ -725,7 +706,7 @@ display(manifest)
     cells.append(md("""
 ## 2. Official custom-input scoring
 
-Each target dimension is submitted alone with `mode='custom_input'`. Diversity and Multi-View_Consistency are not submitted. Set `RQ1_RUN_SCORING=0` to rebuild the metric table skeleton / reuse an existing file without calling VBench again.
+Each of the six VBench 1.0 dimensions is submitted alone with `mode='custom_input'`. Identity, clothes, anatomy, Diversity, and Multi-View Consistency are not submitted. Set `RQ1_RUN_SCORING=0` to rebuild the metric table skeleton / reuse an existing file without calling VBench again.
 """))
 
     cells.append(code("""
@@ -779,22 +760,12 @@ def score_one(benchmark, dimension, column, staged_by_id, full_json):
     parsed = parse_dimension_payload(payload[dimension])
     per_video = {}
     missing = []
-    rejected = []
     for video_id, staged in staged_by_id.items():
         value = lookup_score(parsed, staged.name) if parsed else None
-        if dimension == "Human_Clothes" and value is not None and float(value) < 0:
-            rejected.append(video_id)
-            value = None
         per_video[video_id] = value
-        if value is None and video_id not in rejected:
+        if value is None:
             missing.append(video_id)
     reason = f"Read per-video custom_input scores from {result_path.name}."
-    if rejected:
-        reason += (
-            " Left missing for "
-            + ", ".join(rejected)
-            + " because VBench-2.0 returned -1 (the clip is not one person throughout, so clothes consistency is not scored)."
-        )
     if missing:
         reason += " No score returned for: " + ", ".join(missing) + "."
     if not parsed:
@@ -835,19 +806,16 @@ else:
         checkout, commit = ensure_vbench_checkout()
         print(torch_note)
         print("VBench checkout", commit)
-        for entry in (str(checkout / "VBench-2.0"), str(checkout)):
-            if entry not in sys.path:
-                sys.path.insert(0, entry)
+        entry = str(checkout)
+        if entry not in sys.path:
+            sys.path.insert(0, entry)
         os.environ["VBENCH_CACHE_DIR"] = str(CACHE_DIR / "weights")
-        os.environ["VBENCH2_CACHE_DIR"] = str(CACHE_DIR / "weights")
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         print(shim_torchvision_write_video())
         install_core_packages()
         print(ensure_decord())
-        print(ensure_huggingface_cli())
-        install_anatomy_stack()
         full_vbench = checkout / "vbench" / "VBench_full_info.json"
-        full_vbench2 = checkout / "VBench-2.0" / "vbench2" / "VBench2_full_info.json"
+        full_vbench2 = full_vbench
         STAGED_DIR.mkdir(parents=True, exist_ok=True)
         staged_by_id = {}
         stage_errors = []
@@ -945,7 +913,7 @@ def build_association_notebook() -> None:
     cells.append(md("""
 # RQ1: Video-quality metrics and human enjoyment
 
-**Research question:** How strongly are scores on selected VBench and VBench-2.0 dimensions associated with human viewers' enjoyment ratings of AI-generated drama clips?
+**Research question:** How strongly are scores on the six VBench 1.0 dimensions associated with human viewers' enjoyment ratings of AI-generated drama clips?
 
 Primary analysis: one Spearman correlation per prespecified dimension against mean human enjoyment per clip, with percentile bootstrap 95% confidence intervals, two-sided Monte Carlo permutation tests, and Holm correction across all selected dimensions.
 
@@ -997,9 +965,6 @@ DIMENSIONS = [
     "vbench_dynamic_degree",
     "vbench_aesthetic_quality",
     "vbench_imaging_quality",
-    "vbench2_human_anatomy",
-    "vbench2_human_identity",
-    "vbench2_human_clothes",
 ]
 SCALE_MIN, SCALE_MAX = 1, 5
 MIN_RATERS_PER_CLIP = 3

@@ -60,15 +60,11 @@ VBench (official custom-input supported):
 - `aesthetic_quality`
 - `imaging_quality`
 
-VBench-2.0 (human-fidelity focused examples):
+The confirmatory set is those six VBench 1.0 dimensions. Column names are `vbench_` plus the dimension name.
 
-- `Human_Anatomy`
-- `Human_Identity`
-- `Human_Clothes`
+VBench-2.0 `Human_Identity` and `Human_Clothes` are excluded: both score one person, and the drama clips show several. `Human_Anatomy` would look at each person, and it is excluded because `mmcv` has no wheel for the Colab PyTorch used here. Diversity and Multi-View Consistency need more than one clip per prompt. The scoring notebook records these exclusions in `dimension_applicability.csv` and does not put them in `metric_scores.csv`.
 
-Other VBench-2.0 dimensions such as Diversity or Multi-View_Consistency have additional requirements (for example, multiple videos per prompt) and are not treated as ordinary single-clip scores.
-
-Pilot on study clips to confirm applicability and missingness before finalizing the analysis set. Use distinct column names that encode benchmark version (e.g., `vbench_subject_consistency`, `vbench2_human_anatomy`).
+`dynamic_degree` is in the set. On this six-clip pilot it is 1 for every clip, so Spearman cannot test it until the column varies.
 
 ### Data Preparation
 
@@ -251,6 +247,7 @@ Suggested summary phrasing: “The LMM showed [observed rank association] and [o
 - Clip-level bootstrap intervals condition on the observed viewer panel.
 - NLI and aspect extraction require human validation; automated steps alone are insufficient for strong claims.
 - VBench custom-input covers only a subset of dimensions; results are not full leaderboard evaluations.
+- `Human_Identity` and `Human_Clothes` score one person. Identity keeps a clip only when the opening frame shows exactly one face and at least 20 frames do. Clothes asks whether only one person is present throughout and leaves the clip unscored otherwise. A multi-person drama scene is missing on both columns. That is the published rule. `Human_Anatomy` does look at each person in a frame. It stayed missing in this pilot because `mmcv` has no wheel for the Colab PyTorch.
 - Precedent exists for testing automated enjoyment prediction against human references (e.g., Marcinek et al., 2025, SIGDIAL), but aspect coverage + claim-level NLI are additional methods proposed here and must be validated in this study.
 
 ## Pilot Status (November 2026)
@@ -259,7 +256,7 @@ The six files `dataset/drama_clip_01.mp4` through `drama_clip_06.mp4` are compil
 
 - Every clip is `source_id = unlabeled_pilot`. Drama grouping is unknown, so these clips are not an independent set. Confirmatory clip-level Spearman stays off until real drama IDs exist, or the analysis is cluster-aware.
 - Six VBench 1.0 dimensions were scored on a Colab A100 (standard memory) and written to `data/metric_scores.csv`, with `data/clip_manifest.csv` and `data/dimension_applicability.csv`. `dynamic_degree` is 1 for every clip, so it cannot be tested. Imaging quality is a per-clip MUSIQ mean (about 50–74), not a 0–1 score. Ranks are still valid for Spearman when a column varies.
-- `Human_Anatomy`, `Human_Identity`, and `Human_Clothes` are empty. The Colab torchvision build lacked `write_video`, so VBench-2.0 failed before those models loaded. A later notebook revision supplies that name and skips columns that already have a score for every clip.
+- `Human_Identity` is filled for `drama_clip_01` (0.331) and `drama_clip_02` (0.667). Clips 03–06 came back as VBench `-1` and are stored blank. `Human_Clothes` is blank for all six: LLaVA answered that each clip is not one person throughout, so the clothes questions are never asked, and the pinned code then divided by zero because no clip qualified. `Human_Anatomy` is blank because `mmcv` does not install on this Colab PyTorch. Columns that already have a score for every clip are left unchanged on a later run.
 - Human enjoyment is not in the files. Ratings will be entered by hand from Google Docs into `data/human_ratings.csv`. Do not invent placeholder ratings. `notebooks/rq1-aidrama.ipynb` runs confirmatory association only after both real ratings and real drama IDs are present. Scoring lives in `notebooks/vbench_score_clips.ipynb`.
 
 ## Implementation Status Notes
