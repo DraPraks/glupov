@@ -66,7 +66,7 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 
 A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so the six finished VBench columns are not scored again.
 
-`Human_Clothes` loads LLaVA with PyTorch SDPA. This Colab torch build has no `flash_attn` package, and SDPA is the attention implementation that still answers in real words. Each question sent to LLaVA is printed, then the decoded answer. A VBench result of `-1` is left blank: for clothes it means the clip is not one person throughout, and for identity it means fewer than 20 frames contained exactly one face.
+`Human_Clothes` loads LLaVA with PyTorch SDPA. This Colab torch build has no `flash_attn` package, and SDPA is the attention implementation that still answers in real words. Each question sent to LLaVA is printed, then the decoded answer. Before reading frames it sets Decord's bridge back to native, because `Human_Identity` switches that process-wide bridge to torch and `asnumpy()` then fails. A VBench result of `-1` is left blank: for clothes it means the clip is not one person throughout, and for identity it means fewer than 20 frames contained exactly one face.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -636,6 +636,57 @@ def use_pytorch_sdpa_for_llava(checkout: Path) -> str:
     return "LLaVA attention is sdpa. This torch build has no flash_attn package."
 
 
+def fix_clothes_decord_bridge(checkout: Path) -> str:
+    # Human Identity sets Decord's process-wide bridge to torch at import.
+    # Clothes calls asnumpy(), which exists on a Decord array and not on a Tensor.
+    path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
+    text = path.read_text(encoding="utf-8")
+    needle = "from decord import VideoReader, cpu\\n"
+    if "import decord\\n" not in text:
+        if needle not in text:
+            raise RuntimeError("human_clothes.py has no decord import to extend")
+        text = text.replace(needle, "import decord\\n" + needle, 1)
+    start = text.find("def load_video(")
+    end = text.find("\\ndef LLaVA_Video(")
+    if start < 0 or end < 0 or end <= start:
+        raise RuntimeError("human_clothes.py has no load_video function to replace")
+    current = text[start:end]
+    if 'set_bridge("native")' in current and "import decord\\n" in text:
+        if text != path.read_text(encoding="utf-8"):
+            path.write_text(text, encoding="utf-8")
+        drop_imported_vbench()
+        return "Human_Clothes already resets Decord to native before asnumpy()"
+    replacement = "\\n".join([
+        "def load_video(video_path, max_frames_num, fps=1, force_sample=False):",
+        "    if max_frames_num == 0:",
+        "        return np.zeros((1, 336, 336, 3))",
+        "    # Human Identity sets the torch bridge for the whole process.",
+        "    # get_batch must return a Decord array so asnumpy() exists.",
+        '    decord.bridge.set_bridge("native")',
+        "    vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)",
+        "    total_frame_num = len(vr)",
+        "    video_time = total_frame_num / vr.get_avg_fps()",
+        "    fps = round(vr.get_avg_fps() / fps)",
+        "    frame_idx = [i for i in range(0, len(vr), fps)]",
+        "    frame_time = [i / fps for i in frame_idx]",
+        "    if len(frame_idx) > max_frames_num or force_sample:",
+        "        sample_fps = max_frames_num",
+        "        uniform_sampled_frames = np.linspace(0, total_frame_num - 1, sample_fps, dtype=int)",
+        "        frame_idx = uniform_sampled_frames.tolist()",
+        "        frame_time = [i / vr.get_avg_fps() for i in frame_idx]",
+        '    frame_time = ",".join([f"{i:.2f}s" for i in frame_time])',
+        "    batch = vr.get_batch(frame_idx)",
+        '    spare_frames = batch.asnumpy() if hasattr(batch, "asnumpy") else batch.detach().cpu().numpy()',
+        "    return spare_frames, frame_time, video_time",
+        "",
+        "",
+    ])
+    text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    drop_imported_vbench()
+    return "Human_Clothes resets Decord to native before asnumpy()"
+
+
 def trace_llava_clothes(checkout: Path) -> str:
     # Print the chat prompt and the decoded answer inside the pinned Human_Clothes function.
     path = checkout / "VBench-2.0" / "vbench2" / "human_clothes.py"
@@ -980,6 +1031,7 @@ else:
         print(ensure_huggingface_cli())
         print(prefetch_retinaface())
         print(use_pytorch_sdpa_for_llava(checkout))
+        print(fix_clothes_decord_bridge(checkout))
         print(trace_llava_clothes(checkout))
         install_anatomy_stack()
         full_vbench = checkout / "vbench" / "VBench_full_info.json"
