@@ -62,7 +62,7 @@ VBench (official custom-input supported):
 
 The confirmatory set is those six VBench 1.0 dimensions. Column names are `vbench_` plus the dimension name.
 
-VBench-2.0 `Human_Identity` and `Human_Clothes` are excluded: both score one person, and the drama clips show several. `Human_Anatomy` would look at each person, and it is excluded because `mmcv` has no wheel for the Colab PyTorch used here. Diversity and Multi-View Consistency need more than one clip per prompt. The scoring notebook records these exclusions in `dimension_applicability.csv` and does not put them in `metric_scores.csv`.
+VBench-2.0 `Human_Identity` and `Human_Clothes` are excluded: both score one person, and the drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. The scoring notebook records these exclusions in `dimension_applicability.csv` and does not put them in `metric_scores.csv`. `Human_Anatomy` looks at each person, so the scoring notebook writes it to `vbench2_human_anatomy`. That column is outside the six-dimension confirmatory set.
 
 `dynamic_degree` is in the set. On this six-clip pilot it is 1 for every clip, so Spearman cannot test it until the column varies.
 
@@ -247,7 +247,7 @@ Suggested summary phrasing: “The LMM showed [observed rank association] and [o
 - Clip-level bootstrap intervals condition on the observed viewer panel.
 - NLI and aspect extraction require human validation; automated steps alone are insufficient for strong claims.
 - VBench custom-input covers only a subset of dimensions; results are not full leaderboard evaluations.
-- `Human_Identity` and `Human_Clothes` score one person. Identity keeps a clip only when the opening frame shows exactly one face and at least 20 frames do. Clothes asks whether only one person is present throughout and leaves the clip unscored otherwise. A multi-person drama scene is missing on both columns. That is the published rule. `Human_Anatomy` does look at each person in a frame. It stayed missing in this pilot because `mmcv` has no wheel for the Colab PyTorch.
+- `Human_Identity` and `Human_Clothes` score one person. Identity keeps a clip only when the opening frame shows exactly one face and at least 20 frames do. Clothes asks whether only one person is present throughout and leaves the clip unscored otherwise. A multi-person drama scene is missing on both columns. That is the published rule. `Human_Anatomy` looks at each person in a frame. The scoring notebook installs the CUDA `mmcv` wheel for the current Colab PyTorch and writes `vbench2_human_anatomy`. That column stays out of the confirmatory association set.
 - Precedent exists for testing automated enjoyment prediction against human references (e.g., Marcinek et al., 2025, SIGDIAL), but aspect coverage + claim-level NLI are additional methods proposed here and must be validated in this study.
 
 ## Pilot Status (November 2026)
@@ -256,13 +256,13 @@ The six files `dataset/drama_clip_01.mp4` through `drama_clip_06.mp4` are compil
 
 - Every clip is `source_id = unlabeled_pilot`. Drama grouping is unknown, so these clips are not an independent set. Confirmatory clip-level Spearman stays off until real drama IDs exist, or the analysis is cluster-aware.
 - Six VBench 1.0 dimensions were scored on a Colab A100 (standard memory) and written to `data/metric_scores.csv`, with `data/clip_manifest.csv` and `data/dimension_applicability.csv`. `dynamic_degree` is 1 for every clip, so it cannot be tested. Imaging quality is a per-clip MUSIQ mean (about 50–74), not a 0–1 score. Ranks are still valid for Spearman when a column varies.
-- `Human_Identity` is filled for `drama_clip_01` (0.331) and `drama_clip_02` (0.667). Clips 03–06 came back as VBench `-1` and are stored blank. `Human_Clothes` is blank for all six: LLaVA answered that each clip is not one person throughout, so the clothes questions are never asked, and the pinned code then divided by zero because no clip qualified. `Human_Anatomy` is blank because `mmcv` does not install on this Colab PyTorch. Columns that already have a score for every clip are left unchanged on a later run.
+- `Human_Identity` is filled for `drama_clip_01` (0.331) and `drama_clip_02` (0.667). Clips 03–06 came back as VBench `-1` and are stored blank. `Human_Clothes` is blank for all six: LLaVA answered that each clip is not one person throughout, so the clothes questions are never asked, and the pinned code then divided by zero because no clip qualified. The committed pilot table still has no `vbench2_human_anatomy` values. The scoring notebook fills that column on the next Colab run and leaves a column unchanged once every clip already has a score.
 - Human enjoyment is not in the files. Ratings will be entered by hand from Google Docs into `data/human_ratings.csv`. Do not invent placeholder ratings. `notebooks/rq1-aidrama.ipynb` runs confirmatory association only after both real ratings and real drama IDs are present. Scoring lives in `notebooks/vbench_score_clips.ipynb`.
 
 ## Implementation Status Notes
 
 - RQ1 association notebook (`notebooks/rq1-aidrama.ipynb`) keeps Spearman, bootstrap, permutation, Holm, and median sensitivity. It loads `data/metric_scores.csv` and runs confirmatory tests only when real enjoyment ratings and real drama IDs are present.
-- RQ1 scoring notebook (`notebooks/vbench_score_clips.ipynb`) builds `data/clip_manifest.csv` and official custom-input scores. The local 16 GB laptop run produced empty scores. The six VBench 1.0 columns above came from a Colab A100 run.
+- RQ1 scoring notebook (`notebooks/vbench_score_clips.ipynb`) builds `data/clip_manifest.csv` and official custom-input scores. The local 16 GB laptop run produced empty scores. The six VBench 1.0 columns above came from a Colab A100 run. The same notebook now also scores `vbench2_human_anatomy` on that runtime.
 - RQ2 requires collection pipelines for human and LMM evaluations, aspect extraction (manual or assisted), coverage calculation, NLI inference, and multi-level aggregation.
 - With this six-clip pilot, treat numeric output as a pipeline test only. Skip inferential claims.
 

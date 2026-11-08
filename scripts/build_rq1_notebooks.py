@@ -64,9 +64,9 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 3. Runtime → Run all.
 4. When the last cell finishes, it downloads `rq1_vbench_csvs.zip`. Put those CSVs in the repo's `data/` folder. Add `human_ratings.csv` from Google Docs later, then run `rq1-aidrama.ipynb`.
 
-This notebook scores the six VBench 1.0 dimensions that apply to these clips: subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality. A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so those columns are not scored again.
+This notebook scores the six VBench 1.0 dimensions that apply to these clips: subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality. It also scores VBench 2.0 `Human_Anatomy` into `vbench2_human_anatomy`. A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so those columns are not scored again.
 
-`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. `Human_Anatomy` is not scored because `mmcv` has no wheel for this Colab PyTorch. Diversity and Multi-View Consistency need more than one clip per prompt. Those five are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`.
+`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook still uses only the six VBench 1.0 columns.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -75,7 +75,7 @@ Missing scores stay missing. They are never written as zero. This notebook does 
 Outputs:
 
 - `clip_manifest.csv` — `video_id`, `path`, `source_id`, `duration`, `source_id_basis`
-- `metric_scores.csv` — one row per clip, the six VBench 1.0 columns
+- `metric_scores.csv` — one row per clip, the six VBench 1.0 columns plus `vbench2_human_anatomy`
 - `dimension_applicability.csv` — what ran, and why a dimension was skipped
 """))
 
@@ -223,7 +223,7 @@ VBENCH_DIMENSIONS = [
     "aesthetic_quality",
     "imaging_quality",
 ]
-VBENCH2_DIMENSIONS = []
+VBENCH2_DIMENSIONS = ["Human_Anatomy"]
 
 def metric_column(benchmark: str, dimension: str) -> str:
     if benchmark == "vbench":
@@ -258,16 +258,6 @@ EXCLUDED_DIMENSIONS = [
         "reason": (
             "VBench-2.0 asks whether only one person is present throughout and "
             "does not score clothes otherwise. These drama clips show several people."
-        ),
-    },
-    {
-        "benchmark": "vbench2",
-        "dimension": "Human_Anatomy",
-        "single_clip": True,
-        "status": "excluded",
-        "reason": (
-            "Human Anatomy looks at each person, but mmcv has no wheel for this "
-            "Colab PyTorch, so the dimension cannot be scored here."
         ),
     },
     {
@@ -564,6 +554,143 @@ def install_core_packages():
         print("Packages left unchanged:", ", ".join(skipped))
 
 
+ANATOMY_YOLO_URL = (
+    "git+https://github.com/AILab-CVC/YOLO-World.git@4826695a84ce370dad7fe4cb555a6c7162f3751d"
+)
+ANATOMY_PACKAGES = [
+    "setuptools>=77",
+    "mmengine==0.10.5",
+    "mmdet==3.0.0",
+    "mmyolo==0.6.0",
+    "supervision==0.19.0",
+]
+
+
+def anatomy_mmcv_requirement():
+    import torch
+    cuda = torch.version.cuda
+    if not cuda or not torch.cuda.is_available():
+        raise RuntimeError("Human Anatomy needs the CUDA torch that is already installed. " + A100_SWITCH)
+    major_minor = ".".join(torch.__version__.split("+")[0].split(".")[:2])
+    version = f"2.2.0+cu.{cuda}.torch.{major_minor}"
+    index = "https://wheels.astral.sh/simple/cu" + cuda.replace(".", "") + "/"
+    return version, index
+
+
+def install_pinned(packages):
+    pending = []
+    for package in packages:
+        if pip_would_change_torch([package]):
+            print("Skipping", package, "because pip would replace the CUDA torch build.")
+            continue
+        pending.append(package)
+    if pending:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *pending])
+
+
+def install_anatomy_mmcv():
+    import importlib.metadata
+    version, index = anatomy_mmcv_requirement()
+    try:
+        installed = importlib.metadata.version("mmcv")
+    except importlib.metadata.PackageNotFoundError:
+        installed = ""
+    if installed == version:
+        print("mmcv", version, "already installed")
+        return
+    spec = "mmcv==" + version
+    command = [sys.executable, "-m", "pip", "install", spec, "--extra-index-url", index]
+    probe = subprocess.run(command + ["--dry-run"], capture_output=True, text=True)
+    probe_text = ((probe.stdout or "") + "\\n" + (probe.stderr or "")).lower()
+    if "uninstalling torch" in probe_text or "would install torch" in probe_text:
+        command.append("--no-deps")
+        print("Installing", spec, "without dependencies so the CUDA torch build stays.")
+    else:
+        print("Installing", spec)
+    subprocess.check_call(command)
+
+
+def install_anatomy_yolo():
+    import importlib.metadata
+    try:
+        importlib.metadata.version("yolo-world")
+        print("yolo-world already installed")
+        return
+    except importlib.metadata.PackageNotFoundError:
+        pass
+    print("Installing YOLO-World without replacing mmyolo.")
+    subprocess.check_call([
+        sys.executable, "-m", "pip", "install", "--no-deps", "--no-build-isolation",
+        ANATOMY_YOLO_URL,
+    ])
+
+
+def patch_anatomy_packages():
+    import site
+    cap_old = "mmcv_maximum_version = '2.1.0'"
+    cap_new = "mmcv_maximum_version = '2.3.0'"
+    adafactor_old = "OPTIMIZERS.register_module(name='Adafactor', module=Adafactor)"
+    adafactor_new = "OPTIMIZERS.register_module(name='Adafactor', module=Adafactor, force=True)"
+    notes = []
+    loaded = [
+        name for name in ("mmdet", "mmyolo", "mmengine.optim.optimizer.builder", "yolo_world")
+        if name in sys.modules
+    ]
+    for root in site.getsitepackages():
+        for rel in ("mmdet/__init__.py", "mmyolo/__init__.py"):
+            path = Path(root, rel)
+            if path.is_file() and cap_old in path.read_text(encoding="utf-8"):
+                path.write_text(path.read_text(encoding="utf-8").replace(cap_old, cap_new), encoding="utf-8")
+                notes.append(str(path))
+        builder = Path(root, "mmengine/optim/optimizer/builder.py")
+        if builder.is_file() and adafactor_old in builder.read_text(encoding="utf-8"):
+            text = builder.read_text(encoding="utf-8")
+            builder.write_text(text.replace(adafactor_old, adafactor_new, 1), encoding="utf-8")
+            notes.append(str(builder))
+    if notes and loaded:
+        raise RuntimeError(
+            "Anatomy patches were written after "
+            + ", ".join(loaded)
+            + " had already been imported. Runtime → Restart runtime, then Run all."
+        )
+    if notes:
+        print("Patched anatomy packages:")
+        print("\\n".join(notes))
+    else:
+        print("Anatomy package patches already present.")
+
+
+def patch_anatomy_clip_config(checkout: Path):
+    root = checkout / "VBench-2.0" / "vbench2" / "third_party" / "YOLO-World"
+    old = "text_model_name = '/mnt/petrelfs/zhengdian/code/ckpt/clip-vit-base-patch32'"
+    new = "text_model_name = 'openai/clip-vit-base-patch32'"
+    if not root.is_dir():
+        raise RuntimeError(f"Missing YOLO-World configs under {root}")
+    changed = []
+    for path in sorted(root.glob("yolo_world_v2_*.py")):
+        text = path.read_text(encoding="utf-8")
+        if old in text:
+            path.write_text(text.replace(old, new), encoding="utf-8")
+            changed.append(path.name)
+    if changed:
+        print("Pointed CLIP at openai/clip-vit-base-patch32 in", ", ".join(changed))
+    else:
+        print("YOLO-World CLIP path already points at a public model.")
+
+
+def install_anatomy_stack(checkout: Path):
+    if not INSTALL_SCORING_DEPS:
+        print("RQ1_INSTALL_DEPS=0: expecting the Human Anatomy packages to be installed.")
+        patch_anatomy_packages()
+        patch_anatomy_clip_config(checkout)
+        return
+    install_pinned(ANATOMY_PACKAGES)
+    install_anatomy_mmcv()
+    install_anatomy_yolo()
+    patch_anatomy_packages()
+    patch_anatomy_clip_config(checkout)
+
+
 def ensure_vbench_checkout():
     dest = CACHE_DIR / "VBench"
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -706,7 +833,7 @@ display(manifest)
     cells.append(md("""
 ## 2. Official custom-input scoring
 
-Each of the six VBench 1.0 dimensions is submitted alone with `mode='custom_input'`. Identity, clothes, anatomy, Diversity, and Multi-View Consistency are not submitted. Set `RQ1_RUN_SCORING=0` to rebuild the metric table skeleton / reuse an existing file without calling VBench again.
+Each VBench 1.0 dimension, and `Human_Anatomy`, is submitted alone with `mode='custom_input'`. Identity, clothes, Diversity, and Multi-View Consistency are not submitted. Set `RQ1_RUN_SCORING=0` to rebuild the metric table skeleton / reuse an existing file without calling VBench again.
 """))
 
     cells.append(code("""
@@ -731,24 +858,30 @@ def score_one(benchmark, dimension, column, staged_by_id, full_json):
     import torch
     run_name = column
     VBENCH_RAW_DIR.mkdir(parents=True, exist_ok=True)
-    if benchmark == "vbench":
-        from vbench import VBench
-        bench = VBench("cuda", str(full_json), str(VBENCH_RAW_DIR))
-    else:
-        from vbench2 import VBench2
-        bench = VBench2("cuda", str(full_json), str(VBENCH_RAW_DIR))
-    kwargs = dict(
-        videos_path=str(STAGED_DIR),
-        name=run_name,
-        dimension_list=[dimension],
-        mode="custom_input",
-        local=False,
-        read_frame=False,
-        prompt_list=[],
-    )
-    if dimension == "imaging_quality":
-        kwargs["imaging_quality_preprocessing_mode"] = "longer"
-    bench.evaluate(**kwargs)
+    previous_cwd = Path.cwd()
+    try:
+        if benchmark == "vbench2":
+            os.chdir(VBENCH2_HOME)
+        if benchmark == "vbench":
+            from vbench import VBench
+            bench = VBench("cuda", str(full_json), str(VBENCH_RAW_DIR))
+        else:
+            from vbench2 import VBench2
+            bench = VBench2("cuda", str(full_json), str(VBENCH_RAW_DIR))
+        kwargs = dict(
+            videos_path=str(STAGED_DIR),
+            name=run_name,
+            dimension_list=[dimension],
+            mode="custom_input",
+            local=False,
+            read_frame=False,
+            prompt_list=[],
+        )
+        if dimension == "imaging_quality":
+            kwargs["imaging_quality_preprocessing_mode"] = "longer"
+        bench.evaluate(**kwargs)
+    finally:
+        os.chdir(previous_cwd)
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     result_path = VBENCH_RAW_DIR / f"{run_name}_eval_results.json"
@@ -810,7 +943,12 @@ else:
         if entry not in sys.path:
             sys.path.insert(0, entry)
         os.environ["VBENCH_CACHE_DIR"] = str(CACHE_DIR / "weights")
+        os.environ["VBENCH2_CACHE_DIR"] = str(CACHE_DIR / "weights")
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
+        VBENCH2_HOME = checkout / "VBench-2.0"
+        vbench2_entry = str(VBENCH2_HOME)
+        if vbench2_entry not in sys.path:
+            sys.path.insert(0, vbench2_entry)
         print(shim_torchvision_write_video())
         install_core_packages()
         print(ensure_decord())
@@ -849,6 +987,8 @@ else:
                 print(" ", spec["dimension"], "already scored, left unchanged")
                 continue
             try:
+                if spec["dimension"] == "Human_Anatomy":
+                    install_anatomy_stack(checkout)
                 print("Scoring", spec["dimension"], "...")
                 per_video, reason = score_one(
                     spec["benchmark"], spec["dimension"], spec["column"],
