@@ -68,6 +68,8 @@ This notebook scores the six VBench 1.0 dimensions that apply to these clips: su
 
 `Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook still uses only the six VBench 1.0 columns.
 
+`Human_Anatomy` pins `timm==0.4.12` before it imports mmdet. That is the newest release that still exports `timm.data.transforms._pil_interp` (`timm==0.9.16` does not). Packages installed after that pin do not upgrade timm. If a newer timm is already imported, restart the runtime once, then continue.
+
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
 Missing scores stay missing. They are never written as zero. This notebook does not invent human enjoyment ratings.
@@ -563,6 +565,87 @@ ANATOMY_PACKAGES = [
     "mmyolo==0.6.0",
     "supervision==0.19.0",
 ]
+# Newest PyPI release whose timm.data.transforms still defines _pil_interp.
+# timm 0.5.4 and later, including 0.9.16, removed that name.
+ANATOMY_TIMM = "0.4.12"
+
+
+def anatomy_timm_constraint() -> Path:
+    path = CACHE_DIR / "anatomy-timm-constraint.txt"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("timm==" + ANATOMY_TIMM + "\\n", encoding="utf-8")
+    return path
+
+
+def installed_distribution_version(name: str) -> str:
+    import importlib
+    import importlib.metadata
+    importlib.invalidate_caches()
+    importlib.metadata.MetadataPathFinder.invalidate_caches()
+    try:
+        return importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        return ""
+
+
+def timm_transforms_source_has_pil_interp() -> bool:
+    import importlib
+    import importlib.util
+    importlib.invalidate_caches()
+    found = importlib.util.find_spec("timm.data.transforms")
+    if found is None or not found.origin:
+        return False
+    text = Path(found.origin).read_text(encoding="utf-8", errors="replace")
+    return "def _pil_interp(" in text
+
+
+def install_anatomy_timm():
+    loaded = [name for name in sys.modules if name == "timm" or name.startswith("timm.")]
+    if loaded:
+        module = sys.modules.get("timm")
+        version = getattr(module, "__version__", "") if module is not None else ""
+        transforms = sys.modules.get("timm.data.transforms")
+        symbol_missing = transforms is not None and not hasattr(transforms, "_pil_interp")
+        if version == ANATOMY_TIMM and not symbol_missing:
+            print("timm", ANATOMY_TIMM, "already imported")
+            anatomy_timm_constraint()
+            return
+        raise RuntimeError(
+            "A newer timm is already imported and does not export "
+            "timm.data.transforms._pil_interp. "
+            "Runtime → Restart runtime once, then continue."
+        )
+    if (
+        installed_distribution_version("timm") == ANATOMY_TIMM
+        and timm_transforms_source_has_pil_interp()
+    ):
+        print("timm", ANATOMY_TIMM, "already installed")
+        anatomy_timm_constraint()
+        return
+    spec = "timm==" + ANATOMY_TIMM
+    command = [sys.executable, "-m", "pip", "install", spec]
+    probe = subprocess.run(command + ["--dry-run"], capture_output=True, text=True)
+    probe_text = ((probe.stdout or "") + "\\n" + (probe.stderr or "")).lower()
+    if (
+        "uninstalling torch" in probe_text
+        or "would install torch" in probe_text
+        or "downloading torch" in probe_text
+    ):
+        command.append("--no-deps")
+        print("Installing", spec, "without dependencies so the CUDA torch build stays.")
+    else:
+        print("Installing", spec)
+    subprocess.check_call(command)
+    found = installed_distribution_version("timm")
+    if found != ANATOMY_TIMM or not timm_transforms_source_has_pil_interp():
+        raise RuntimeError(
+            "timm==" + ANATOMY_TIMM
+            + " does not export timm.data.transforms._pil_interp. Found "
+            + (found or "no timm")
+            + "."
+        )
+    anatomy_timm_constraint()
+    print("Pinned timm", ANATOMY_TIMM, "before mmdet is imported.")
 
 
 def anatomy_mmcv_requirement():
@@ -577,14 +660,17 @@ def anatomy_mmcv_requirement():
 
 
 def install_pinned(packages):
+    constraint = str(anatomy_timm_constraint())
     pending = []
     for package in packages:
-        if pip_would_change_torch([package]):
+        if pip_would_change_torch([package, "-c", constraint]):
             print("Skipping", package, "because pip would replace the CUDA torch build.")
             continue
         pending.append(package)
     if pending:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", *pending])
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install", *pending, "-c", constraint,
+        ])
 
 
 def install_anatomy_mmcv():
@@ -598,7 +684,11 @@ def install_anatomy_mmcv():
         print("mmcv", version, "already installed")
         return
     spec = "mmcv==" + version
-    command = [sys.executable, "-m", "pip", "install", spec, "--extra-index-url", index]
+    constraint = str(anatomy_timm_constraint())
+    command = [
+        sys.executable, "-m", "pip", "install", spec,
+        "--extra-index-url", index, "-c", constraint,
+    ]
     probe = subprocess.run(command + ["--dry-run"], capture_output=True, text=True)
     probe_text = ((probe.stdout or "") + "\\n" + (probe.stderr or "")).lower()
     if "uninstalling torch" in probe_text or "would install torch" in probe_text:
@@ -634,7 +724,7 @@ def install_anatomy_yolo():
     print("Installing YOLO-World", ANATOMY_YOLO_COMMIT, "without replacing mmyolo.")
     subprocess.check_call([
         sys.executable, "-m", "pip", "install", "--force-reinstall", "--no-deps",
-        "--no-build-isolation", ANATOMY_YOLO_URL,
+        "--no-build-isolation", "-c", str(anatomy_timm_constraint()), ANATOMY_YOLO_URL,
     ])
     found = installed_yolo_commit()
     if found != ANATOMY_YOLO_COMMIT:
@@ -715,6 +805,8 @@ def install_anatomy_stack(checkout: Path):
         patch_anatomy_packages()
         patch_anatomy_clip_config(checkout)
         return
+    # Pin timm before mmdet is imported. Later installs in this cell must not upgrade it.
+    install_anatomy_timm()
     install_pinned(ANATOMY_PACKAGES)
     install_anatomy_mmcv()
     install_anatomy_yolo()
