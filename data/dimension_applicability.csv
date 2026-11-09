@@ -1,12 +1,12 @@
 dimension,column_name,benchmark,custom_input_single_clip,status,reason
-subject_consistency,vbench_subject_consistency,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
-background_consistency,vbench_background_consistency,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
-motion_smoothness,vbench_motion_smoothness,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
-dynamic_degree,vbench_dynamic_degree,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
-aesthetic_quality,vbench_aesthetic_quality,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
-imaging_quality,vbench_imaging_quality,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
-Human_Anatomy,vbench2_human_anatomy,vbench2,True,not_run,The scoring notebook can score Human_Anatomy. The vbench2_human_anatomy column is empty until the next Colab run.
-Human_Identity,vbench2_human_identity,vbench2,True,not_applicable_multi_person,"VBench-2.0 anchors identity to one face in the opening frame and drops a clip with fewer than 20 single-face frames. These drama clips show several people, so the dimension is not scored."
-Human_Clothes,vbench2_human_clothes,vbench2,True,not_applicable_multi_person,VBench-2.0 asks whether only one person is present throughout and does not score clothes otherwise. These drama clips show several people.
+subject_consistency,vbench_subject_consistency,vbench,True,scored,Read per-video custom_input scores from vbench_subject_consistency_eval_results.json.
+background_consistency,vbench_background_consistency,vbench,True,scored,Read per-video custom_input scores from vbench_background_consistency_eval_results.json.
+motion_smoothness,vbench_motion_smoothness,vbench,True,scored,Read per-video custom_input scores from vbench_motion_smoothness_eval_results.json.
+dynamic_degree,vbench_dynamic_degree,vbench,True,scored,Read per-video custom_input scores from vbench_dynamic_degree_eval_results.json.
+aesthetic_quality,vbench_aesthetic_quality,vbench,True,scored,Read per-video custom_input scores from vbench_aesthetic_quality_eval_results.json.
+imaging_quality,vbench_imaging_quality,vbench,True,scored,Read per-video custom_input scores from vbench_imaging_quality_eval_results.json.
+Human_Anatomy,vbench2_human_anatomy,vbench2,True,failed,"ImportError: Package lvis is not installed. Please run ""pip install git+https://github.com/lvis-dataset/lvis-api.git""."
+Human_Identity,,vbench2,True,not_applicable_multi_person,"VBench-2.0 anchors identity to one face in the opening frame and drops a clip with fewer than 20 single-face frames. These drama clips show several people, so the dimension is not scored."
+Human_Clothes,,vbench2,True,not_applicable_multi_person,VBench-2.0 asks whether only one person is present throughout and does not score clothes otherwise. These drama clips show several people.
 Diversity,,vbench2,False,not_applicable_single_clip,"VBench-2.0 custom input needs >=20 videos for one prompt (prompt-index.mp4, index 0..19). One raw clip has no Diversity score."
 Multi-View_Consistency,,vbench2,False,not_applicable_single_clip,VBench-2.0 custom input expects multiple views in their own folder. One raw clip is not a multi-view set.
