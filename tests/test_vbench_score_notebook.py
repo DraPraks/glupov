@@ -1,11 +1,9 @@
-"""Scoring notebook stays aligned with the builder, including the anatomy timm pin."""
+"""Scoring notebook stays aligned with the builder, including the anatomy timm shim."""
 
 import ast
-import importlib.metadata
 import importlib.util
 import json
 import sys
-import tempfile
 import types
 import unittest
 from pathlib import Path
@@ -37,9 +35,9 @@ def helpers_source():
         if cell["cell_type"] != "code":
             continue
         text = "".join(cell["source"])
-        if "def install_anatomy_timm(" in text:
+        if "def shim_timm_pil_interp(" in text:
             return text
-    raise AssertionError("install_anatomy_timm is missing from the scoring notebook")
+    raise AssertionError("shim_timm_pil_interp is missing from the scoring notebook")
 
 
 def function_source(name):
@@ -53,12 +51,8 @@ def function_source(name):
 
 def load_anatomy(namespace):
     tree = ast.parse(helpers_source())
-    keep_assign = {"ANATOMY_TIMM", "ANATOMY_PACKAGES"}
     keep_def = {
-        "anatomy_timm_constraint",
-        "installed_distribution_version",
-        "timm_transforms_source_has_pil_interp",
-        "install_anatomy_timm",
+        "shim_timm_pil_interp",
         "pip_would_change_torch",
         "install_pinned",
         "install_anatomy_stack",
@@ -67,15 +61,36 @@ def load_anatomy(namespace):
     for node in tree.body:
         if isinstance(node, ast.Assign):
             names = [target.id for target in node.targets if isinstance(target, ast.Name)]
-            if keep_assign.intersection(names):
+            if "ANATOMY_PACKAGES" in names:
                 body.append(node)
         elif isinstance(node, ast.FunctionDef) and node.name in keep_def:
             body.append(node)
     module = ast.Module(body=body, type_ignores=[])
     ast.fix_missing_locations(module)
     namespace.setdefault("print", lambda *args, **kwargs: None)
+    namespace.setdefault("Path", Path)
     exec(compile(module, "<anatomy>", "exec"), namespace)
     return namespace
+
+
+def install_fake_timm(transforms):
+    saved = {name: sys.modules.get(name) for name in ("timm", "timm.data", "timm.data.transforms")}
+    timm = types.ModuleType("timm")
+    data = types.ModuleType("timm.data")
+    timm.data = data
+    data.transforms = transforms
+    sys.modules["timm"] = timm
+    sys.modules["timm.data"] = data
+    sys.modules["timm.data.transforms"] = transforms
+    return saved
+
+
+def restore_modules(saved):
+    for name, module in saved.items():
+        if module is None:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = module
 
 
 class ScoringNotebookTests(unittest.TestCase):
@@ -88,7 +103,7 @@ class ScoringNotebookTests(unittest.TestCase):
         self.assertEqual(NOTEBOOK.read_text(encoding="utf-8"), before)
 
     def test_notebook_code_parses(self):
-        for index, cell in enumerate(notebook_cells()):
+        for cell in notebook_cells():
             if cell["cell_type"] != "code":
                 continue
             ast.parse("".join(cell["source"]))
@@ -103,56 +118,60 @@ class ScoringNotebookTests(unittest.TestCase):
         self.assertIn("Human_Clothes", text)
         self.assertIn("already scored, left unchanged", text)
 
-    def test_anatomy_pins_timm_before_mmdet_and_does_not_upgrade_it(self):
-        text = helpers_source()
+    def test_anatomy_shims_timm_before_mmdet_import_and_does_not_pin(self):
+        text = code_text()
+        self.assertNotIn("0.4.12", text)
+        self.assertNotIn("anatomy_timm_constraint", text)
+        self.assertNotIn("install_anatomy_timm", text)
+        shim = function_source("shim_timm_pil_interp")
+        self.assertIn("import timm.data.transforms as t", shim)
+        self.assertIn('if not hasattr(t, "_pil_interp"):', shim)
+        self.assertIn("t._pil_interp = t.str_to_pil_interp", shim)
         stack = function_source("install_anatomy_stack")
-        self.assertLess(stack.index("install_anatomy_timm()"), stack.index("install_pinned(ANATOMY_PACKAGES)"))
-        self.assertIn('ANATOMY_TIMM = "0.4.12"', text)
-        self.assertIn("Restart runtime once, then continue.", text)
-        self.assertNotIn('pip install timm==0.9.16', text)
-        for name in ("install_pinned", "install_anatomy_mmcv", "install_anatomy_yolo"):
-            body = function_source(name)
-            self.assertIn('"-c"', body)
-            self.assertIn("anatomy_timm_constraint()", body)
-        core = function_source("install_core_packages")
-        self.assertIn('"timm"', core)
-        self.assertNotIn("timm==", core)
+        installed = stack.split("return", 1)[1]
+        self.assertLess(installed.index("install_pinned(ANATOMY_PACKAGES)"), installed.index("shim_timm_pil_interp()"))
+        self.assertIn("shim_timm_pil_interp()", stack.split("return", 1)[0])
+        self.assertNotIn('"-c"', function_source("install_pinned"))
+        self.assertNotIn('"-c"', function_source("install_anatomy_mmcv"))
+        self.assertNotIn('"-c"', function_source("install_anatomy_yolo"))
+        anatomy = text.split('if spec["dimension"] == "Human_Anatomy":', 1)[1]
+        self.assertLess(anatomy.index("install_anatomy_stack(checkout)"), anatomy.index("score_one("))
 
-    def test_newer_imported_timm_asks_for_one_restart_and_does_not_install(self):
+    def test_shim_aliases_the_renamed_function(self):
+        transforms = types.ModuleType("timm.data.transforms")
+
+        def str_to_pil_interp(mode):
+            return "pil:" + mode
+
+        transforms.str_to_pil_interp = str_to_pil_interp
+        saved = install_fake_timm(transforms)
+        try:
+            load_anatomy({})["shim_timm_pil_interp"]()
+        finally:
+            restore_modules(saved)
+        self.assertIs(transforms._pil_interp, str_to_pil_interp)
+        self.assertEqual(transforms._pil_interp("bicubic"), "pil:bicubic")
+
+    def test_shim_leaves_an_existing_pil_interp(self):
+        transforms = types.ModuleType("timm.data.transforms")
+
+        def old(mode):
+            return "old:" + mode
+
+        def renamed(mode):
+            return "new:" + mode
+
+        transforms._pil_interp = old
+        transforms.str_to_pil_interp = renamed
+        saved = install_fake_timm(transforms)
+        try:
+            load_anatomy({})["shim_timm_pil_interp"]()
+        finally:
+            restore_modules(saved)
+        self.assertIs(transforms._pil_interp, old)
+
+    def test_later_anatomy_installs_do_not_constrain_timm(self):
         calls = []
-
-        class Subprocess:
-            def run(self, command, **kwargs):
-                calls.append(list(command))
-                raise AssertionError(command)
-
-            def check_call(self, command, **kwargs):
-                calls.append(list(command))
-                raise AssertionError(command)
-
-        fake_sys = types.SimpleNamespace(
-            modules={
-                "timm": types.SimpleNamespace(__version__="1.0.31"),
-                "timm.data.transforms": types.SimpleNamespace(),
-            },
-            executable=sys.executable,
-        )
-        with tempfile.TemporaryDirectory() as tmp:
-            namespace = {
-                "CACHE_DIR": Path(tmp),
-                "Path": Path,
-                "sys": fake_sys,
-                "subprocess": Subprocess(),
-            }
-            load_anatomy(namespace)
-            with self.assertRaises(RuntimeError) as caught:
-                namespace["install_anatomy_timm"]()
-        self.assertIn("Restart runtime once, then continue.", str(caught.exception))
-        self.assertEqual(calls, [])
-
-    def test_unimported_timm_is_pinned_and_checked_before_mmdet(self):
-        calls = []
-        installed = {"timm": ""}
 
         class Result:
             stdout = "Requirement already satisfied\n"
@@ -166,102 +185,17 @@ class ScoringNotebookTests(unittest.TestCase):
 
             def check_call(self, command, **kwargs):
                 calls.append(list(command))
-                installed["timm"] = "0.4.12"
 
-        real_version = importlib.metadata.version
-        real_find = importlib.util.find_spec
-
-        def version(name):
-            if name == "timm":
-                if not installed["timm"]:
-                    raise importlib.metadata.PackageNotFoundError(name)
-                return installed["timm"]
-            return real_version(name)
-
-        def find_spec(name):
-            if name == "timm.data.transforms":
-                return types.SimpleNamespace(origin=str(transforms))
-            return real_find(name)
-
-        with tempfile.TemporaryDirectory() as tmp:
-            transforms = Path(tmp) / "transforms.py"
-            transforms.write_text("def _pil_interp(method):\n    return method\n", encoding="utf-8")
-            namespace = {
-                "CACHE_DIR": Path(tmp),
-                "Path": Path,
-                "sys": types.SimpleNamespace(modules={}, executable=sys.executable),
-                "subprocess": Subprocess(),
-            }
-            load_anatomy(namespace)
-            importlib.metadata.version = version
-            importlib.util.find_spec = find_spec
-            try:
-                namespace["install_anatomy_timm"]()
-                namespace["install_pinned"](namespace["ANATOMY_PACKAGES"])
-            finally:
-                importlib.metadata.version = real_version
-                importlib.util.find_spec = real_find
-            constraint = (Path(tmp) / "anatomy-timm-constraint.txt").read_text(encoding="utf-8")
-        self.assertEqual(constraint, "timm==0.4.12\n")
-        pin_commands = [command for command in calls if "timm==0.4.12" in command and "--dry-run" not in command]
-        self.assertTrue(pin_commands)
-        self.assertEqual(pin_commands[0][0:4], [sys.executable, "-m", "pip", "install"])
-        mmdet = [command for command in calls if "mmdet==3.0.0" in command and "--dry-run" not in command]
-        self.assertEqual(len(mmdet), 1)
-        self.assertLess(calls.index(pin_commands[0]), calls.index(mmdet[0]))
-        self.assertIn("-c", mmdet[0])
-        self.assertTrue(any(part.endswith("anatomy-timm-constraint.txt") for part in mmdet[0]))
-        for command in calls:
-            if "--dry-run" in command:
-                continue
-            packages = [part for part in command if part.startswith("timm")]
-            self.assertEqual(packages, ["timm==0.4.12"] if "timm==0.4.12" in command else [])
-
-    def test_pin_that_lacks_the_symbol_stops_before_mmdet(self):
-        class Result:
-            stdout = ""
-            stderr = ""
-            returncode = 0
-
-        class Subprocess:
-            def run(self, command, **kwargs):
-                return Result()
-
-            def check_call(self, command, **kwargs):
-                return None
-
-        real_version = importlib.metadata.version
-        real_find = importlib.util.find_spec
-
-        def version(name):
-            if name == "timm":
-                return "0.4.12"
-            return real_version(name)
-
-        def find_spec(name):
-            if name == "timm.data.transforms":
-                return types.SimpleNamespace(origin=str(transforms))
-            return real_find(name)
-
-        with tempfile.TemporaryDirectory() as tmp:
-            transforms = Path(tmp) / "transforms.py"
-            transforms.write_text("def str_to_pil_interp(mode):\n    return mode\n", encoding="utf-8")
-            namespace = {
-                "CACHE_DIR": Path(tmp),
-                "Path": Path,
-                "sys": types.SimpleNamespace(modules={}, executable=sys.executable),
-                "subprocess": Subprocess(),
-            }
-            load_anatomy(namespace)
-            importlib.metadata.version = version
-            importlib.util.find_spec = find_spec
-            try:
-                with self.assertRaises(RuntimeError) as caught:
-                    namespace["install_anatomy_timm"]()
-            finally:
-                importlib.metadata.version = real_version
-                importlib.util.find_spec = real_find
-        self.assertIn("does not export timm.data.transforms._pil_interp", str(caught.exception))
+        namespace = load_anatomy({
+            "sys": sys,
+            "subprocess": Subprocess(),
+        })
+        namespace["install_pinned"](namespace["ANATOMY_PACKAGES"])
+        installs = [command for command in calls if "--dry-run" not in command]
+        self.assertEqual(len(installs), 1)
+        self.assertIn("mmdet==3.0.0", installs[0])
+        self.assertNotIn("-c", installs[0])
+        self.assertFalse(any(part.startswith("timm") for part in installs[0]))
 
 
 if __name__ == "__main__":
