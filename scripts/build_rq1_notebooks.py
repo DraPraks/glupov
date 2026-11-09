@@ -68,7 +68,7 @@ This notebook scores the six VBench 1.0 dimensions that apply to these clips: su
 
 `Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook still uses only the six VBench 1.0 columns.
 
-`Human_Anatomy` keeps the timm Colab already has. Before mmdet is imported, `_pil_interp` is aliased to `str_to_pil_interp` when the installed timm only has the new name.
+`Human_Anatomy` keeps the timm Colab already has. Before mmdet is installed or imported, `_pil_interp` is aliased to `str_to_pil_interp` when the installed timm only has the new name. `RQ1_INSTALL_DEPS=0` still installs that alias.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -714,21 +714,24 @@ def shim_timm_pil_interp():
     import timm.data.transforms as t
     if not hasattr(t, "_pil_interp"):
         t._pil_interp = t.str_to_pil_interp
+    if not hasattr(t, "_pil_interp"):
+        raise RuntimeError(
+            "timm.data.transforms._pil_interp is missing after aliasing str_to_pil_interp."
+        )
 
 
 def install_anatomy_stack(checkout: Path):
+    shim_timm_pil_interp()
     if not INSTALL_SCORING_DEPS:
         print("RQ1_INSTALL_DEPS=0: expecting the Human Anatomy packages to be installed.")
         patch_anatomy_packages()
         patch_anatomy_clip_config(checkout)
-        shim_timm_pil_interp()
         return
     install_pinned(ANATOMY_PACKAGES)
     install_anatomy_mmcv()
     install_anatomy_yolo()
     patch_anatomy_packages()
     patch_anatomy_clip_config(checkout)
-    shim_timm_pil_interp()
 
 
 def ensure_vbench_checkout():

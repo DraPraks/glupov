@@ -123,14 +123,18 @@ class ScoringNotebookTests(unittest.TestCase):
         self.assertNotIn("0.4.12", text)
         self.assertNotIn("anatomy_timm_constraint", text)
         self.assertNotIn("install_anatomy_timm", text)
+        self.assertNotIn("def _pil_interp(", text)
         shim = function_source("shim_timm_pil_interp")
         self.assertIn("import timm.data.transforms as t", shim)
         self.assertIn('if not hasattr(t, "_pil_interp"):', shim)
         self.assertIn("t._pil_interp = t.str_to_pil_interp", shim)
+        self.assertLess(
+            shim.index("t._pil_interp = t.str_to_pil_interp"),
+            shim.rindex('if not hasattr(t, "_pil_interp")'),
+        )
         stack = function_source("install_anatomy_stack")
-        installed = stack.split("return", 1)[1]
-        self.assertLess(installed.index("install_pinned(ANATOMY_PACKAGES)"), installed.index("shim_timm_pil_interp()"))
-        self.assertIn("shim_timm_pil_interp()", stack.split("return", 1)[0])
+        self.assertLess(stack.index("shim_timm_pil_interp()"), stack.index("if not INSTALL_SCORING_DEPS:"))
+        self.assertLess(stack.index("shim_timm_pil_interp()"), stack.index("install_pinned(ANATOMY_PACKAGES)"))
         self.assertNotIn('"-c"', function_source("install_pinned"))
         self.assertNotIn('"-c"', function_source("install_anatomy_mmcv"))
         self.assertNotIn('"-c"', function_source("install_anatomy_yolo"))
@@ -169,6 +173,59 @@ class ScoringNotebookTests(unittest.TestCase):
         finally:
             restore_modules(saved)
         self.assertIs(transforms._pil_interp, old)
+
+    def test_alias_exists_before_mmdet_install_and_when_installs_are_skipped(self):
+        transforms = types.ModuleType("timm.data.transforms")
+
+        def str_to_pil_interp(mode):
+            return mode
+
+        transforms.str_to_pil_interp = str_to_pil_interp
+        saved = install_fake_timm(transforms)
+        calls = []
+
+        class Result:
+            stdout = "Requirement already satisfied\n"
+            stderr = ""
+            returncode = 0
+
+        class Subprocess:
+            def run(self, command, **kwargs):
+                self._record(command)
+                return Result()
+
+            def check_call(self, command, **kwargs):
+                self._record(command)
+
+            def _record(self, command):
+                command = list(command)
+                if any(str(part).startswith("mmdet") for part in command):
+                    if not hasattr(transforms, "_pil_interp"):
+                        raise AssertionError("mmdet install started before the timm alias")
+                calls.append(command)
+
+        try:
+            namespace = load_anatomy({"sys": sys, "subprocess": Subprocess()})
+            namespace["patch_anatomy_packages"] = lambda: None
+            namespace["patch_anatomy_clip_config"] = lambda checkout: None
+            namespace["install_anatomy_mmcv"] = lambda: None
+            namespace["install_anatomy_yolo"] = lambda: None
+            namespace["INSTALL_SCORING_DEPS"] = False
+            namespace["install_anatomy_stack"](None)
+            self.assertIs(transforms._pil_interp, str_to_pil_interp)
+            self.assertFalse(any(str(part).startswith("mmdet") for command in calls for part in command))
+
+            del transforms._pil_interp
+            calls.clear()
+            namespace["INSTALL_SCORING_DEPS"] = True
+            namespace["install_anatomy_stack"](None)
+        finally:
+            restore_modules(saved)
+        mmdet_commands = [
+            command for command in calls if any(str(part).startswith("mmdet") for part in command)
+        ]
+        self.assertTrue(mmdet_commands)
+        self.assertIs(transforms._pil_interp, str_to_pil_interp)
 
     def test_later_anatomy_installs_do_not_constrain_timm(self):
         calls = []
