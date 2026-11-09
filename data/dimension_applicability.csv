@@ -5,8 +5,8 @@ motion_smoothness,vbench_motion_smoothness,vbench,True,scored,Reused complete sc
 dynamic_degree,vbench_dynamic_degree,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
 aesthetic_quality,vbench_aesthetic_quality,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
 imaging_quality,vbench_imaging_quality,vbench,True,scored,Reused complete scores already stored in metric_scores.csv.
-Human_Anatomy,vbench2_human_anatomy,vbench2,True,failed,"NotImplementedError: UnImplemented dimension Human_Anatomy!, No module named 'mmcv'"
-Human_Identity,vbench2_human_identity,vbench2,True,failed,HTTPError: HTTP Error 504: Gateway Timeout
-Human_Clothes,vbench2_human_clothes,vbench2,True,failed,"NotImplementedError: UnImplemented dimension Human_Clothes!, cannot import name 'LlavaLlamaForCausalLM' from 'vbench2.third_party.LLaVA_NeXT.llava.model' (/content/rq1-vbench/VBench/VBench-2.0/vbench2/third_party/LLaVA_NeXT/llava/model/__init__.py)"
+Human_Anatomy,vbench2_human_anatomy,vbench2,True,not_run,The scoring notebook can score Human_Anatomy. The vbench2_human_anatomy column is empty until the next Colab run.
+Human_Identity,vbench2_human_identity,vbench2,True,not_applicable_multi_person,"VBench-2.0 anchors identity to one face in the opening frame and drops a clip with fewer than 20 single-face frames. These drama clips show several people, so the dimension is not scored."
+Human_Clothes,vbench2_human_clothes,vbench2,True,not_applicable_multi_person,VBench-2.0 asks whether only one person is present throughout and does not score clothes otherwise. These drama clips show several people.
 Diversity,,vbench2,False,not_applicable_single_clip,"VBench-2.0 custom input needs >=20 videos for one prompt (prompt-index.mp4, index 0..19). One raw clip has no Diversity score."
 Multi-View_Consistency,,vbench2,False,not_applicable_single_clip,VBench-2.0 custom input expects multiple views in their own folder. One raw clip is not a multi-view set.
