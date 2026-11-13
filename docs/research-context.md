@@ -64,7 +64,7 @@ The confirmatory set is those six VBench 1.0 dimensions. Column names are `vbenc
 
 VBench-2.0 `Human_Identity` and `Human_Clothes` are excluded for this multi-person pilot: both score one person, and the drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. `data/dimension_applicability.csv` marks identity and clothes `not_applicable_multi_person`. Their columns in `data/metric_scores.csv` stay blank. `Human_Anatomy` looks at each person. The scoring notebook writes it to `vbench2_human_anatomy`, which is empty until the next Colab run. That column is outside the six-dimension confirmatory set.
 
-`dynamic_degree` is in the set. On this six-clip pilot it is 1 for every clip, so Spearman cannot test it until the column varies.
+`dynamic_degree` is in the set. On this pilot it is 1 for every clip, so Kendall's tau-b is undefined until the column varies.
 
 ### Data Preparation
 
@@ -84,25 +84,25 @@ where \( r_i \) is the number of ratings for clip \( i \). Report SD and number 
 For each dimension \( j \):
 
 \[
-\rho_j = \operatorname{Corr}\bigl(\operatorname{rank}(x_{1j},\dots,x_{nj}),\ \operatorname{rank}(\bar{y}_1,\dots,\bar{y}_n)\bigr)
+\tau_{b,j} = \frac{P_j - Q_j}{\sqrt{(P_j + Q_j + T_j)(P_j + Q_j + U_j)}}
 \]
 
-(Spearman rank correlation). Positive \(\rho\) means higher dimension scores tend to accompany higher enjoyment.
+(Kendall's tau-b). \(P_j\) and \(Q_j\) are the concordant and discordant clip pairs for dimension \(j\). \(T_j\) counts pairs tied only on the dimension score, and \(U_j\) counts pairs tied only on mean enjoyment. Pairs tied on both are in neither count. This is the tie-adjusted coefficient ([SciPy `kendalltau`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kendalltau.html), `variant='b'`, the default). With no ties it equals Kendall's tau-a, \((P - Q) / \binom{n}{2}\). Positive \(\tau_b\) means higher dimension scores tend to accompany higher enjoyment.
 
 **Uncertainty and inference:**
 
 - Bootstrap 95% percentile confidence intervals (resample paired clip observations with replacement; condition on observed viewer panel).
 - Two-sided Monte Carlo (or exact, for small N) permutation tests of the null of no association.
 - Holm correction across the family of selected dimensions.
-- Report \( N \) (eligible clips), \(\rho\), 95% CI, raw and Holm-adjusted p-values, and missingness per dimension.
+- Report \( N \) (eligible clips), \(\tau_b\), 95% CI, raw and Holm-adjusted p-values, and missingness per dimension.
 
 **Sensitivity:** Repeat with median enjoyment instead of mean.
 
 **Interpretation notes:**
 
-- \(\rho\) describes association within the observed clips, not causal effect of the dimension.
-- Close \(\rho\) values should not be over-ranked.
-- Largest \( |\rho| \) does not by itself prove one dimension is stronger than others in the population.
+- \(\tau_b\) describes association within the observed clips, not causal effect of the dimension.
+- Close \(\tau_b\) values should not be over-ranked.
+- Largest \( |\tau_b| \) does not by itself prove one dimension is stronger than others in the population.
 - More viewers improve the estimate of each clip’s mean enjoyment but do not increase the number of independent clip-level observations.
 
 **Optional extensions (not required for primary RQ1):**
@@ -110,7 +110,7 @@ For each dimension \( j \):
 - Ordinal mixed-effects regression to examine conditional associations while accounting for viewer and video random effects.
 - Predictive evaluation via cross-validation that holds out entire videos.
 
-**Implementation note:** A Jupyter notebook exists for the statistical pipeline (loading, aggregation, Spearman + bootstrap + permutation + Holm, plots, sensitivity). It can be extended with a preceding stage that runs VBench / VBench-2.0 custom-input evaluation and converts per-video JSON outputs into `metric_scores.csv`.
+**Implementation note:** A Jupyter notebook exists for the statistical pipeline (loading, aggregation, Kendall's tau-b + bootstrap + permutation + Holm, plots, sensitivity). Scoring is a separate notebook. It writes VBench / VBench-2.0 custom-input scores to `metric_scores.csv`. The association notebook still computes Spearman and must be switched to `scipy.stats.kendalltau` (`variant='b'`) before any coefficient is reported.
 
 ## RQ2 Methodology
 
@@ -124,7 +124,7 @@ For each dimension \( j \):
 | 1. Human evaluations | Video + shared 1–5 question | `human_id`, `video_id`, rating, explanation | Reference judgments |
 | 2. LMM assessment | Same clip + fixed neutral prompt | `video_id`, model, rating, explanation, settings | Independent automated prediction |
 | 3. Rating preparation | Ratings for same video | human_mean, human_SD, LMM_rating, abs_error | One paired rating per clip |
-| 4. Rating analysis | Clip-level pairs | MAE, Spearman \(\rho\), uncertainty | Numerical alignment |
+| 4. Rating analysis | Clip-level pairs | MAE, Kendall's \(\tau_b\), uncertainty | Numerical alignment |
 | 5. Aspect extraction | Each full explanation | Claim list (aspect, stance, enjoyment effect) | Makes statements comparable |
 | 6. Aspect matching | Human/LMM aspects for same clip | matched_aspects, coverage per human–LMM pair | Reasons LMM did/did not mention |
 | 7. NLI classification | Matched claim pairs | entailment / contradiction / neutral (+ scores) | Compatibility of claims |
@@ -140,7 +140,7 @@ For each dimension \( j \):
 
 where \( A_i \) is the LMM rating and \( \bar{H}_i \) is the human mean for clip \( i \). Lower is closer. Report in rating points (1–5 scale).
 
-**Spearman rank correlation** between the vector of human means and the vector of LMM ratings across clips. Report \(\rho\), 95% CI, and p-value. Higher positive \(\rho\) indicates more similar ordering (not necessarily matching absolute scores).
+**Kendall's tau-b** between the vector of human means and the vector of LMM ratings across clips. Report \(\tau_b\), 95% CI, and p-value. Higher positive \(\tau_b\) indicates more similar ordering (not necessarily matching absolute scores). Use the same tie-adjusted definition as RQ1.
 
 Optional normalized closeness (rescaled absolute error) may be reported but is not an independent finding. Compare against human–human variability and a naive baseline (e.g., always predict the training-set mean) before claiming judge replacement.
 
@@ -200,7 +200,7 @@ If \( k = 0 \), the rate is undefined (null).
 
 - Per human–LMM pair: coverage, NLI agreement rate (or null), matched-claim count.
 - Per video: mean coverage across humans, mean NLI agreement across humans (defined scores only), human mean/SD, LMM rating, absolute error, counts of undefined cases.
-- Study-level: mean of video-level coverage values, mean of video-level NLI agreement rates, overall MAE, overall Spearman \(\rho\), with clip-level confidence intervals and full sample-size reporting at each stage.
+- Study-level: mean of video-level coverage values, mean of video-level NLI agreement rates, overall MAE, overall Kendall's \(\tau_b\), with clip-level confidence intervals and full sample-size reporting at each stage.
 
 Five comparisons from one clip are not five independent videos.
 
@@ -227,7 +227,7 @@ Suggested summary phrasing: “The LMM showed [observed rank association] and [o
 - `claims.csv` — one row per extracted claim: evaluator, `video_id`, aspect, claim_text, enjoyment_effect
 - `pair_results.csv` — one row per human–LMM–video pair: coverage, agreement, matched_count, undefined_flag
 - `video_summary.csv` — one row per video: human_mean, human_sd, lmm_rating, abs_error, mean_coverage, mean_nli, …
-- `rq2_summary.json` — overall MAE, \(\rho\), coverage, NLI agreement, uncertainty, sample counts
+- `rq2_summary.json` — overall MAE, \(\tau_b\), coverage, NLI agreement, uncertainty, sample counts
 
 ## Shared Reporting Checklist
 
@@ -254,14 +254,14 @@ Suggested summary phrasing: “The LMM showed [observed rank association] and [o
 
 The six files `dataset/drama_clip_01.mp4` through `drama_clip_06.mp4` are compiled pilot clips, not stand-in videos and not the study sample. The planned scale remains about 30 clips and about 5 viewers per clip. Scores from this pilot are a pipeline check. They are not RQ1 results.
 
-- Every clip is `source_id = unlabeled_pilot`. Drama grouping is unknown, so these clips are not an independent set. Confirmatory clip-level Spearman stays off until real drama IDs exist, or the analysis is cluster-aware.
-- Six VBench 1.0 dimensions were scored on a Colab A100 (standard memory) and written to `data/metric_scores.csv`, with `data/clip_manifest.csv` and `data/dimension_applicability.csv`. `dynamic_degree` is 1 for every clip, so it cannot be tested. Imaging quality is a per-clip MUSIQ mean (about 50–74), not a 0–1 score. Ranks are still valid for Spearman when a column varies.
+- Every clip is `source_id = unlabeled_pilot`. Drama grouping is unknown, so these clips are not an independent set. Confirmatory clip-level Kendall's tau-b stays off until real drama IDs exist, or the analysis is cluster-aware.
+- Six VBench 1.0 dimensions were scored and written to `data/metric_scores.csv`, with `data/clip_manifest.csv` and `data/dimension_applicability.csv`. `dynamic_degree` is 1 for every clip, so tau-b is undefined for that column. Imaging quality is a per-clip MUSIQ mean (about 50–74), not a 0–1 score. Tau-b is still valid when a column varies, including columns with ties.
 - `vbench2_human_identity` and `vbench2_human_clothes` are blank. Both dimensions are `not_applicable_multi_person` in `data/dimension_applicability.csv` because these clips show several people. `vbench2_human_anatomy` is empty. The scoring notebook fills that column on the next Colab run and leaves a column unchanged once every clip already has a score.
 - Human enjoyment is not in the files. Ratings will be entered by hand from Google Docs into `data/human_ratings.csv`. Do not invent placeholder ratings. `notebooks/rq1-aidrama.ipynb` runs confirmatory association only after both real ratings and real drama IDs are present. Scoring lives in `notebooks/vbench_score_clips.ipynb`.
 
 ## Implementation Status Notes
 
-- RQ1 association notebook (`notebooks/rq1-aidrama.ipynb`) keeps Spearman, bootstrap, permutation, Holm, and median sensitivity. It loads `data/metric_scores.csv` and runs confirmatory tests only when real enjoyment ratings and real drama IDs are present.
+- RQ1 association notebook (`notebooks/rq1-aidrama.ipynb`) still runs Spearman, bootstrap, permutation, Holm, and median sensitivity. The decided coefficient is Kendall's tau-b. Switch that notebook before reporting a number. It loads `data/metric_scores.csv` and runs confirmatory tests only when real enjoyment ratings and real drama IDs are present.
 - RQ1 scoring notebook (`notebooks/vbench_score_clips.ipynb`) builds `data/clip_manifest.csv` and official custom-input scores. The local 16 GB laptop run produced empty scores. The six VBench 1.0 columns above came from a Colab A100 run. The same notebook now also scores `vbench2_human_anatomy` on that runtime.
 - RQ2 requires collection pipelines for human and LMM evaluations, aspect extraction (manual or assisted), coverage calculation, NLI inference, and multi-level aggregation.
 - With this six-clip pilot, treat numeric output as a pipeline test only. Skip inferential claims.
