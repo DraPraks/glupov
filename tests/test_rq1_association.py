@@ -76,6 +76,7 @@ EXPECTED_DIMENSIONS = [
     "vbench_dynamic_degree",
     "vbench_aesthetic_quality",
     "vbench_imaging_quality",
+    "vbench2_human_anatomy",
 ]
 
 
@@ -579,7 +580,7 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         self.assertNotIn("repeated source_id", proc.stdout)
         self.assertNotIn("Filled ", proc.stdout)
         self.assertIn("Eligible clips N = " + str(n), proc.stdout)
-        self.assertIn("Holm family size = 6", proc.stdout)
+        self.assertIn("Holm family size = " + str(len(EXPECTED_DIMENSIONS)), proc.stdout)
         self.assertIn("vbench2_human_anatomy", scored.columns)
         for field in (
             "dimension",
@@ -657,12 +658,15 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
                 places=9,
             )
             p_family.append(reference["p_raw"])
-        self.assertEqual(len(p_family), 6)
+        self.assertEqual(len(p_family), len(EXPECTED_DIMENSIONS))
         self.assertEqual(
             [EXPECTED_DIMENSIONS[i] for i, status in enumerate(statuses) if status != "tested"],
             ["vbench_dynamic_degree"],
         )
-        self.assertNotIn("vbench2_human_anatomy", set(saved["dimension"]))
+        anatomy = saved.loc[saved["dimension"].eq("vbench2_human_anatomy")].iloc[0]
+        self.assertEqual(anatomy["analysis_status"], "tested")
+        self.assertEqual(int(anatomy["n_missing_metric"]), 0)
+        self.assertGreater(int(anatomy["n_unique_metric_values"]), 1)
         self.assertNotIn("vbench2_human_identity", set(saved["dimension"]))
         self.assertNotIn("vbench2_human_clothes", set(saved["dimension"]))
         dynamic = saved.loc[saved["dimension"].eq("vbench_dynamic_degree")].iloc[0]
@@ -709,6 +713,7 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
                         vbench_motion_smoothness=values,
                         vbench_aesthetic_quality=values,
                         vbench_imaging_quality=values,
+                        vbench2_human_anatomy=values,
                     )
                     write_ratings(
                         data / "human_ratings.csv",
@@ -807,6 +812,7 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
                     vbench_dynamic_degree=values,
                     vbench_aesthetic_quality=values,
                     vbench_imaging_quality=values,
+                    vbench2_human_anatomy=values,
                 )
                 write_ratings(
                     data / "human_ratings.csv",
@@ -836,6 +842,7 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
                 vbench_dynamic_degree=values,
                 vbench_aesthetic_quality=values,
                 vbench_imaging_quality=values,
+                vbench2_human_anatomy=values,
             )
             write_ratings(
                 data / "human_ratings.csv",

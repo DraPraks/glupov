@@ -76,7 +76,7 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 
 This notebook scores the six VBench 1.0 dimensions that apply to these clips: subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality. It also scores VBench 2.0 `Human_Anatomy` into `vbench2_human_anatomy`. A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so those columns are not scored again.
 
-`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook still uses only the six VBench 1.0 columns.
+`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook uses the dimensions this table marks scored, including `vbench2_human_anatomy`.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -1098,15 +1098,15 @@ def build_association_notebook() -> None:
     cells.append(md("""
 # RQ1 association
 
-Kendall's tau-b between the six VBench 1.0 scores and clip-level mean human enjoyment.
+Kendall's tau-b between the scored VBench columns and clip-level mean human enjoyment.
 
 The confirmatory question is pairwise: when one clip has a higher dimension score than another, does it also tend to have higher enjoyment? Tau-b summarizes concordant pairs minus discordant pairs and adjusts for ties. The coefficient is `(P - Q) / sqrt((P + Q + T)(P + Q + U))`, from `scipy.stats.kendalltau(..., variant="b")`. P and Q are concordant and discordant clip pairs. T counts pairs tied only on the dimension score. U counts pairs tied only on mean enjoyment. Pairs tied on both are in neither count. With no ties this equals tau-a. Positive tau-b means higher scores tend to accompany higher enjoyment. The pairs are not extra independent clips. N is the number of clips.
 
-Spearman is not estimated. Tau-b and Spearman are different scales and are not compared. A constant column makes tau-b undefined. That dimension stays in the six-test Holm family as an internal p of 1, and its coefficient and p-values are reported as unavailable rather than as zero.
+Spearman is not estimated. Tau-b and Spearman are different scales and are not compared. A constant column makes tau-b undefined. That dimension stays in the Holm family as an internal p of 1, and its coefficient and p-values are reported as unavailable rather than as zero.
 
 Reads `data/metric_scores.csv`, keeping `source_id` as text so values such as `001` and `1` stay distinct. When any `source_id` is blank, fills only those blanks from `data/clip_manifest.csv` after rejecting null, duplicate, or conflicting manifest IDs. Reads `data/human_ratings.csv` when that file exists (`video_id`, `rater_id`, `enjoyment` as integers 1–5).
 
-The confirmatory family is the six VBench 1.0 columns. Identity and clothes stay excluded. `vbench2_human_anatomy` is exploratory and is not in the family. `dynamic_degree` stays in the family; on this pilot it is constant, so tau-b is undefined.
+The confirmatory family is every dimension `data/dimension_applicability.csv` marks `scored`: the six VBench 1.0 columns plus `vbench2_human_anatomy`. Identity, clothes, Diversity, and Multi-View Consistency stay out because that table marks them not applicable. `dynamic_degree` stays in the family; on this pilot it is constant, so tau-b is undefined.
 
 This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no association claims, and removes a prior `rq1_kendall_results.csv` and any leftover `rq1_spearman_results.csv`. Non-numeric and infinite scores are rejected. Blank scores stay missing and are never filled with zero. Scores are not rounded or jittered before ties are judged. Clips with fewer than 3 ratings are excluded. Kendall's tau-b needs at least 4 eligible clips. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist. `unlabeled_pilot` is not treated as a verified shared drama or as evidence that the clips are independent.
 
@@ -1130,6 +1130,7 @@ DIMENSIONS = [
     "vbench_dynamic_degree",
     "vbench_aesthetic_quality",
     "vbench_imaging_quality",
+    "vbench2_human_anatomy",
 ]
 SCALE_MIN, SCALE_MAX = 1, 5
 MIN_RATERS = 3
