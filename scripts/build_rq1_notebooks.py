@@ -1106,7 +1106,7 @@ Spearman is not estimated. Tau-b and Spearman are different scales and are not c
 
 Reads `data/metric_scores.csv`, keeping `source_id` as text so values such as `001` and `1` stay distinct. When any `source_id` is blank, fills only those blanks from `data/clip_manifest.csv` after rejecting null, duplicate, or conflicting manifest IDs. Reads `data/human_ratings.csv` when that file exists (`video_id`, `rater_id`, `enjoyment` as integers 1–5).
 
-The confirmatory family is every dimension `data/dimension_applicability.csv` marks `scored`: the six VBench 1.0 columns plus `vbench2_human_anatomy`. Identity, clothes, Diversity, and Multi-View Consistency stay out because that table marks them not applicable. `dynamic_degree` stays in the family; on this pilot it is constant, so tau-b is undefined.
+The confirmatory family is every row in `data/dimension_applicability.csv` whose status is `scored`. The notebook reads those rows' `column_name` values in table order. On this pilot those columns are the six VBench 1.0 columns plus `vbench2_human_anatomy`. Identity, clothes, Diversity, and Multi-View Consistency stay out because that table marks them not applicable. `vbench_dynamic_degree` stays in the family when its row is `scored`; on this pilot it is constant, so tau-b is undefined and it enters Holm as an internal p of 1.
 
 This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no association claims, and removes a prior `rq1_kendall_results.csv` and any leftover `rq1_spearman_results.csv`. Non-numeric and infinite scores are rejected. Blank scores stay missing and are never filled with zero. Scores are not rounded or jittered before ties are judged. Clips with fewer than 3 ratings are excluded. Kendall's tau-b needs at least 4 eligible clips. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist. `unlabeled_pilot` is not treated as a verified shared drama or as evidence that the clips are independent.
 
@@ -1123,15 +1123,6 @@ import pandas as pd
 from scipy.stats import kendalltau
 from statsmodels.stats.multitest import multipletests
 
-DIMENSIONS = [
-    "vbench_subject_consistency",
-    "vbench_background_consistency",
-    "vbench_motion_smoothness",
-    "vbench_dynamic_degree",
-    "vbench_aesthetic_quality",
-    "vbench_imaging_quality",
-    "vbench2_human_anatomy",
-]
 SCALE_MIN, SCALE_MAX = 1, 5
 MIN_RATERS = 3
 MIN_CLIPS = 4
@@ -1198,6 +1189,42 @@ def output_dir():
     if override:
         return Path(override).resolve()
     return repo_root() / "rq1_outputs"
+
+
+def load_dimensions(folder):
+    path = folder / "dimension_applicability.csv"
+    if not path.is_file():
+        stop(
+            "Missing " + str(path) + ".",
+            "Confirmatory dimensions are the applicability rows whose status is scored.",
+        )
+        return None
+    table = pd.read_csv(path, dtype=str)
+    if not {"status", "column_name"}.issubset(table.columns):
+        raise ValueError(
+            "dimension_applicability.csv needs status and column_name columns."
+        )
+    status = table["status"].astype("string").str.strip()
+    column = clean_id(table["column_name"])
+    scored = status.eq("scored")
+    if int(scored.sum()) == 0:
+        stop(
+            "dimension_applicability.csv has no rows with status scored.",
+            "Confirmatory inference was not run.",
+        )
+        return None
+    names = column.loc[scored]
+    if names.isna().any():
+        raise ValueError(
+            "A scored row in dimension_applicability.csv has a blank column_name."
+        )
+    if names.duplicated().any():
+        raise ValueError(
+            "dimension_applicability.csv repeats a scored column_name."
+        )
+    dimensions = names.astype(str).tolist()
+    print("Confirmatory dimensions: " + ", ".join(dimensions) + ".")
+    return dimensions
 
 
 def kendall_tau_b(x, y):
@@ -1565,11 +1592,11 @@ def empty_result(dimension, n_eligible, status, n_missing):
     }
 
 
-def analyze(included):
+def analyze(included, dimensions):
     n_eligible = len(included)
     rows = []
     p_for_holm = []
-    for i, dimension in enumerate(DIMENSIONS):
+    for i, dimension in enumerate(dimensions):
         if dimension not in included.columns:
             rows.append(empty_result(dimension, n_eligible, "missing_column", n_eligible))
             p_for_holm.append(1.0)
@@ -1603,7 +1630,7 @@ def analyze(included):
     return pd.DataFrame(rows)
 
 
-def print_results(results):
+def print_results(results, dimensions):
     n_eligible = int(results["n_eligible_clips"].iloc[0]) if len(results) else 0
     print("Eligible clips N = " + str(n_eligible) + ". n on each row is complete cases.")
     print(
@@ -1687,7 +1714,7 @@ def print_results(results):
         )
     print(
         "Holm family size = "
-        + str(len(DIMENSIONS))
+        + str(len(dimensions))
         + ". Untestable prespecified dimensions enter the correction as p = 1, "
         + "and their coefficient and p-values are reported as unavailable. "
         + "CIs are marginal paired-clip bootstrap 95% percentile intervals, "
@@ -1754,8 +1781,11 @@ def main():
     if blocked:
         stop(*blocked)
         return
-    results = analyze(included)
-    print_results(results)
+    dimensions = load_dimensions(folder)
+    if dimensions is None:
+        return
+    results = analyze(included, dimensions)
+    print_results(results, dimensions)
     write_results(results)
 
 

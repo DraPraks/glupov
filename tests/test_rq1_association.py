@@ -194,6 +194,15 @@ def integer_ratings(total, n_raters=5):
     return [base] * (n_raters - extra) + ([base + 1] * extra if extra else [])
 
 
+def write_applicability(dest, scored, excluded=()):
+    lines = ["dimension,column_name,status"]
+    for name in scored:
+        lines.append(f"{name},{name},scored")
+    for name, status in excluded:
+        lines.append(f"{name},{name},{status}")
+    (dest / "dimension_applicability.csv").write_text("\n".join(lines) + "\n")
+
+
 def synthetic_metrics(dest, n, subject, **columns):
     frame = pd.DataFrame({
         "video_id": [f"clip_{i:02d}" for i in range(n)],
@@ -206,6 +215,7 @@ def synthetic_metrics(dest, n, subject, **columns):
             frame[dimension] = columns.get(dimension, [1.0] * n)
     dest.mkdir(parents=True, exist_ok=True)
     frame.to_csv(dest / "metric_scores.csv", index=False)
+    write_applicability(dest, EXPECTED_DIMENSIONS)
     return frame
 
 
@@ -217,6 +227,8 @@ def copy_metrics(dest, source_ids=None, drop_source=False):
         frame = frame.drop(columns=["source_id"])
     dest.mkdir(parents=True, exist_ok=True)
     frame.to_csv(dest / "metric_scores.csv", index=False)
+    applicability = ROOT / "data" / "dimension_applicability.csv"
+    (dest / "dimension_applicability.csv").write_bytes(applicability.read_bytes())
     return frame
 
 
@@ -241,6 +253,9 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         self.assertIn('variant="b"', text)
         self.assertIn("kendalltau", text)
         self.assertIn("Kendall's tau-b needs at least", text)
+        self.assertNotIn("DIMENSIONS = [", text)
+        self.assertIn('status.eq("scored")', text)
+        self.assertIn("column_name", text)
 
     def test_repo_ratings_absent_writes_nothing(self):
         self.assertFalse((ROOT / "data" / "human_ratings.csv").exists())
@@ -697,6 +712,52 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
             else:
                 self.assertEqual(p_family[index], 1.0)
                 self.assertTrue(pd.isna(row["p_permutation_holm"]))
+
+    def test_scored_rows_enter_the_family_and_other_rows_stay_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            data = tmp / "data"
+            values = [0.1, 0.2, 0.3, 0.4]
+            frame = synthetic_metrics(data, 4, values)
+            frame["vbench_extra_scored"] = values
+            frame["vbench2_human_identity"] = values
+            frame["vbench2_human_clothes"] = list(reversed(values))
+            frame.to_csv(data / "metric_scores.csv", index=False)
+            write_applicability(
+                data,
+                EXPECTED_DIMENSIONS + ["vbench_extra_scored"],
+                (
+                    ("vbench2_human_identity", "not_applicable_multi_person"),
+                    ("vbench2_human_clothes", "not_applicable_multi_person"),
+                ),
+            )
+            write_ratings(data / "human_ratings.csv", list(frame["video_id"]))
+            proc = run_notebook(
+                data,
+                tmp / "out",
+                env_overrides={"RQ1_N_BOOTSTRAP": "100", "RQ1_N_PERMUTATIONS": "20", "RQ1_SEED": "1"},
+            )
+            saved = pd.read_csv(tmp / "out" / "rq1_kendall_results.csv")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(
+            list(saved["dimension"]),
+            EXPECTED_DIMENSIONS + ["vbench_extra_scored"],
+        )
+        self.assertNotIn("vbench2_human_identity", set(saved["dimension"]))
+        self.assertNotIn("vbench2_human_clothes", set(saved["dimension"]))
+        extra = saved.loc[saved["dimension"].eq("vbench_extra_scored")].iloc[0]
+        self.assertEqual(extra["analysis_status"], "tested")
+        dynamic = saved.loc[saved["dimension"].eq("vbench_dynamic_degree")].iloc[0]
+        self.assertEqual(dynamic["analysis_status"], "no_variation")
+        self.assertTrue(pd.isna(dynamic["kendall_tau_b"]))
+        self.assertEqual(dynamic["permutation_method"], "not_applicable")
+        self.assertIn(
+            "Holm family size = " + str(len(EXPECTED_DIMENSIONS) + 1),
+            proc.stdout,
+        )
+        self.assertIn("vbench_extra_scored", proc.stdout)
+        self.assertNotIn("vbench2_human_identity", proc.stdout)
+        self.assertNotIn("vbench2_human_clothes", proc.stdout)
 
     def test_strict_orders_are_plus_and_minus_one(self):
         for label, enjoyment in (("increasing", [1, 2, 3, 4]), ("reversed", [4, 3, 2, 1])):
