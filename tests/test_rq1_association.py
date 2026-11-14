@@ -234,8 +234,8 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         self.assertIn('dtype={"video_id": str, "source_id": str}', text)
         self.assertIn("contains infinite scores", text)
         self.assertEqual(text.count('errors="coerce"'), 1)
-        self.assertIn("rq1_kendall_results.csv", text)
-        self.assertNotIn("rq1_spearman_results.csv", text)
+        self.assertIn('RESULTS_NAME = "rq1_kendall_results.csv"', text)
+        self.assertIn('LEGACY_RESULTS_NAME = "rq1_spearman_results.csv"', text)
         self.assertNotIn("spearmanr", text)
         self.assertIn('variant="b"', text)
         self.assertIn("kendalltau", text)
@@ -410,6 +410,25 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         self.assertIn("No association claims were written.", proc.stdout)
         self.assertNotIn("kendall_tau_b=", proc.stdout)
         self.assertNotIn("p_permutation_holm", proc.stdout)
+
+    def test_blocked_run_removes_legacy_spearman_results(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            data = tmp / "data"
+            out = tmp / "out"
+            copy_metrics(data)
+            kendall = plant_stale(out)
+            spearman = out / "rq1_spearman_results.csv"
+            spearman.write_text("dimension,rho\nstale,1\n")
+            proc = run_notebook(data, out)
+            self.assertFalse(kendall.exists())
+            self.assertFalse(spearman.exists())
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("Removed prior rq1_kendall_results.csv.", proc.stdout)
+        self.assertIn("Removed prior rq1_spearman_results.csv.", proc.stdout)
+        self.assertIn("Enjoyment has not been collected.", proc.stdout)
+        self.assertIn("No association claims were written.", proc.stdout)
+        self.assertNotIn("kendall_tau_b=", proc.stdout)
 
     def test_partial_source_id_is_filled_from_manifest(self):
         with tempfile.TemporaryDirectory() as tmp:

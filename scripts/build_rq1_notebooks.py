@@ -1108,7 +1108,7 @@ Reads `data/metric_scores.csv`, keeping `source_id` as text so values such as `0
 
 The confirmatory family is the six VBench 1.0 columns. Identity and clothes stay excluded. `vbench2_human_anatomy` is exploratory and is not in the family. `dynamic_degree` stays in the family; on this pilot it is constant, so tau-b is undefined.
 
-This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no association claims, and removes a prior `rq1_kendall_results.csv`. Non-numeric and infinite scores are rejected. Blank scores stay missing and are never filled with zero. Scores are not rounded or jittered before ties are judged. Clips with fewer than 3 ratings are excluded. Kendall's tau-b needs at least 4 eligible clips. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist. `unlabeled_pilot` is not treated as a verified shared drama or as evidence that the clips are independent.
+This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no association claims, and removes a prior `rq1_kendall_results.csv` and any leftover `rq1_spearman_results.csv`. Non-numeric and infinite scores are rejected. Blank scores stay missing and are never filled with zero. Scores are not rounded or jittered before ties are judged. Clips with fewer than 3 ratings are excluded. Kendall's tau-b needs at least 4 eligible clips. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist. `unlabeled_pilot` is not treated as a verified shared drama or as evidence that the clips are independent.
 
 Bootstrap 95% percentile intervals resample paired clips with replacement. A replicate that makes either column constant is undefined: it is counted, omitted from the percentiles, and the notebook warns. The interval is reported only when at least 100 replicates are defined; otherwise the limits stay unavailable and the notebook warns. Intervals condition on the observed viewer panel and are not simultaneous family-wide intervals. The permutation test holds metric scores fixed and permutes mean enjoyment. Absolute tau-b is the two-sided statistic. Complete cases of size 7 or fewer (`7! = 5040`) use every enjoyment permutation. Larger samples use Monte Carlo. The Monte Carlo p-value is `(1 + count of |tau| at least the observed |tau|) / (1 + permutations)` and is never zero. Median enjoyment repeats tau-b as a sensitivity check, not as a second confirmatory test.
 
@@ -1144,6 +1144,7 @@ MIN_VALID_BOOTSTRAPS = 100
 EXACT_MAX_N = 7
 PROVISIONAL_SOURCE = "unlabeled_pilot"
 RESULTS_NAME = "rq1_kendall_results.csv"
+LEGACY_RESULTS_NAME = "rq1_spearman_results.csv"
 
 
 def configured_int(name, default, minimum):
@@ -1168,10 +1169,12 @@ def stop(*lines):
 
 
 def clear_prior_results():
-    path = output_dir() / RESULTS_NAME
-    if path.is_file():
-        path.unlink()
-        print("Removed prior " + path.name + ".")
+    folder = output_dir()
+    for name in (RESULTS_NAME, LEGACY_RESULTS_NAME):
+        path = folder / name
+        if path.is_file():
+            path.unlink()
+            print("Removed prior " + path.name + ".")
 
 
 def repo_root():
