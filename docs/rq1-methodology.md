@@ -4,7 +4,9 @@ RQ1 asks how strongly selected automated scores associate with human enjoyment o
 
 ## Eligible clips
 
-Ratings are integers on a 1–5 scale. The clip outcome is the mean of those ratings. A clip needs at least 3 ratings to be eligible. N is the number of eligible clips. The association requires at least 4 eligible clips.
+Ratings are integers on a 1–5 scale. The clip outcome is the mean of those ratings. A clip needs at least 3 ratings to be eligible. N is the number of eligible clips. The association requires at least 4 eligible clips. Each dimension is then tested on its complete cases, eligible clips with a finite score. Fewer than 4 complete cases leaves that dimension untestable.
+
+Confirmatory inference is blocked when a `source_id` is missing, provisional (`unlabeled_pilot`), or repeated. A missing column, a blank value, or one provisional or repeated value among the eligible clips stops the run.
 
 ## Confirmatory dimensions
 
@@ -30,7 +32,7 @@ The coefficient is Kendall's tau-b, `scipy.stats.kendalltau(..., variant="b")`:
 
 P and Q are concordant and discordant clip pairs. T counts pairs tied only on the score. U counts pairs tied only on mean enjoyment. Pairs tied on both are in neither count. SciPy ranks the two columns as part of the coefficient. There is no separate saved rank table. Scores are not rounded or jittered. Missing scores stay missing.
 
-A constant column leaves tau-b undefined. On this pilot that column is dynamic degree (`vbench_dynamic_degree`). The undefined coefficient is not stored as zero. The dimension stays in the family and enters Holm as an internal p of 1.
+A constant column leaves tau-b undefined. On this pilot that column is dynamic degree (`vbench_dynamic_degree`). The undefined coefficient is not stored as zero. Every untestable scored dimension enters Holm as an internal p of 1: a constant score or constant mean enjoyment, a missing column, fewer than 4 complete cases, or all-missing scores. The reported coefficient stays unavailable.
 
 ## Uncertainty
 
@@ -38,7 +40,7 @@ The interval is a paired-clip bootstrap. Clips are resampled with replacement an
 
 ## Test
 
-The test is two-sided. Mean enjoyment is permuted and the scores stay fixed. The statistic is absolute tau-b. When complete cases are 7 or fewer, every enjoyment permutation is enumerated. Otherwise the test is Monte Carlo. The notebook default is 4999 draws, and that p-value is never zero. Holm is applied across the scored family. Median enjoyment repeats tau-b as a sensitivity check, not as a second confirmatory test. Dimensions are not ranked by correlation.
+The test is two-sided. Mean enjoyment is permuted and the scores stay fixed. The statistic is absolute tau-b. When complete cases are 7 or fewer, every enjoyment permutation is enumerated. Otherwise the test is Monte Carlo. The notebook default is 4999 draws, and that p-value is never zero. The default seed is 42 (`RQ1_SEED`). Each dimension uses that seed plus its zero-based index in the scored family, so order changes later dimensions' bootstrap and Monte Carlo draws. Holm is applied across the scored family at α = 0.05. Median enjoyment repeats tau-b as a sensitivity check, not as a second confirmatory test. Dimensions are not ranked by correlation.
 
 ## Placeholder data
 
