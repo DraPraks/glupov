@@ -91,12 +91,12 @@ For each dimension \( j \):
 
 **Uncertainty and inference:**
 
-- Bootstrap 95% percentile confidence intervals (resample paired clip observations with replacement; condition on observed viewer panel).
-- Two-sided Monte Carlo (or exact, for small N) permutation tests of the null of no association.
-- Holm correction across the family of selected dimensions.
-- Report \( N \) (eligible clips), \(\tau_b\), 95% CI, raw and Holm-adjusted p-values, and missingness per dimension.
+- Bootstrap 95% percentile confidence intervals. Resample paired clip rows with replacement and recalculate \(\tau_b\). A replicate that makes either column constant is undefined: count it, leave it out of the percentiles, and warn. Report the interval only when at least 100 replicates are defined; otherwise the limits are unavailable and the notebook warns. Intervals condition on the observed viewer panel and are not simultaneous family-wide intervals.
+- Two-sided permutation tests of no association. Hold the dimension scores fixed and permute mean enjoyment. The test statistic is absolute \(\tau_b\). When the complete-case count is 7 or fewer, enumerate every enjoyment permutation (`7! = 5040`). For larger counts, use Monte Carlo. The Monte Carlo p-value is \((1 + \#\{|\tau| \ge |\tau_{\mathrm{obs}}|\}) / (1 + \text{permutations})\) and is never zero. The default is 4999 permutations and seed 42. Both are configurable, as is the bootstrap replicate count.
+- Holm correction across the six prespecified VBench 1.0 dimensions, \(\alpha = 0.05\). A prespecified dimension that is untestable is entered as \(p = 1\) so the family stays six tests. Its coefficient, raw p-value, and adjusted p-value are reported as unavailable, with a status, not as zero. `vbench2_human_anatomy` is not in this family.
+- Report eligible clips, complete cases, unique values, \(\tau_b\), 95% CI, raw and Holm-adjusted permutation p-values, whether the permutation result is exact or Monte Carlo, bootstrap valid and undefined counts, and missingness per dimension.
 
-**Sensitivity:** Repeat with median enjoyment instead of mean.
+**Sensitivity:** Repeat \(\tau_b\) with median enjoyment instead of the mean. That check is not a second confirmatory test. Spearman is not estimated. Tau-b and Spearman use different scales and are not compared.
 
 **Interpretation notes:**
 
@@ -104,13 +104,14 @@ For each dimension \( j \):
 - Close \(\tau_b\) values should not be over-ranked.
 - Largest \( |\tau_b| \) does not by itself prove one dimension is stronger than others in the population.
 - More viewers improve the estimate of each clip’s mean enjoyment but do not increase the number of independent clip-level observations.
+- The pairs counted by \(\tau_b\) are not additional independent clips. A constant dimension, noisy ranks, or a restricted score range are not fixed by the choice of coefficient.
 
 **Optional extensions (not required for primary RQ1):**
 
 - Ordinal mixed-effects regression to examine conditional associations while accounting for viewer and video random effects.
 - Predictive evaluation via cross-validation that holds out entire videos.
 
-**Implementation note:** A Jupyter notebook exists for the statistical pipeline (loading, aggregation, Kendall's tau-b + bootstrap + permutation + Holm, plots, sensitivity). Scoring is a separate notebook. It writes VBench / VBench-2.0 custom-input scores to `metric_scores.csv`. The association notebook still computes Spearman and must be switched to `scipy.stats.kendalltau` (`variant='b'`) before any coefficient is reported.
+**Implementation note:** `notebooks/rq1-aidrama.ipynb` loads the CSVs, aggregates enjoyment, and computes Kendall's tau-b with `scipy.stats.kendalltau` (`variant='b'`), plus the bootstrap, permutation test, Holm correction, and median sensitivity above. Scoring is a separate notebook. It writes VBench / VBench-2.0 custom-input scores to `metric_scores.csv`. The association notebook does not score clips. It does not report a coefficient while enjoyment ratings or real drama IDs are still blocked.
 
 ## RQ2 Methodology
 
@@ -261,7 +262,7 @@ The six files `dataset/drama_clip_01.mp4` through `drama_clip_06.mp4` are compil
 
 ## Implementation Status Notes
 
-- RQ1 association notebook (`notebooks/rq1-aidrama.ipynb`) still runs Spearman, bootstrap, permutation, Holm, and median sensitivity. The decided coefficient is Kendall's tau-b. Switch that notebook before reporting a number. It loads `data/metric_scores.csv` and runs confirmatory tests only when real enjoyment ratings and real drama IDs are present.
+- RQ1 association notebook (`notebooks/rq1-aidrama.ipynb`) computes Kendall's tau-b with `scipy.stats.kendalltau` (`variant='b'`), bootstrap, permutation, Holm, and median sensitivity. It loads `data/metric_scores.csv` and runs confirmatory tests only when real enjoyment ratings and real drama IDs are present. The unlabeled pilot does not produce those numbers.
 - RQ1 scoring notebook (`notebooks/vbench_score_clips.ipynb`) builds `data/clip_manifest.csv` and official custom-input scores. The local 16 GB laptop run produced empty scores. The six VBench 1.0 columns above came from a Colab A100 run. The same notebook now also scores `vbench2_human_anatomy` on that runtime.
 - RQ2 requires collection pipelines for human and LMM evaluations, aspect extraction (manual or assisted), coverage calculation, NLI inference, and multi-level aggregation.
 - With this six-clip pilot, treat numeric output as a pipeline test only. Skip inferential claims.
