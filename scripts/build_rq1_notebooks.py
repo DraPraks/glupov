@@ -43,6 +43,16 @@ def write_nb(path: Path, cells: list[dict]) -> None:
 
 
 def build_scoring_notebook() -> None:
+    """Leave notebooks/vbench_score_clips.ipynb untouched.
+
+    The committed file is the Colab notebook that scored Human Anatomy
+    (lvis install and the timm _pil_interp alias). This builder is behind
+    that notebook and must not replace it.
+    """
+    path = NB_DIR / "vbench_score_clips.ipynb"
+    if path.is_file():
+        print("left untouched", path)
+        return
     cells: list[dict] = []
     cells.append(md("""
 # VBench custom-input scoring for RQ1 clips
@@ -66,7 +76,7 @@ One raw clip is expanded to about 23 GB of frames in system RAM before VBench re
 
 This notebook scores the six VBench 1.0 dimensions that apply to these clips: subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality. It also scores VBench 2.0 `Human_Anatomy` into `vbench2_human_anatomy`. A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so those columns are not scored again.
 
-`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook still uses only the six VBench 1.0 columns.
+`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook uses the dimensions this table marks scored, including `vbench2_human_anatomy`.
 
 The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
 
@@ -1086,54 +1096,77 @@ def build_association_notebook() -> None:
     """
     cells: list[dict] = []
     cells.append(md("""
-# RQ1 correlations
+# RQ1 association
 
-Spearman association between the six VBench 1.0 scores and clip-level human enjoyment.
+Kendall's tau-b between the scored VBench columns and clip-level mean human enjoyment.
+
+The confirmatory question is pairwise: when one clip has a higher dimension score than another, does it also tend to have higher enjoyment? Tau-b summarizes concordant pairs minus discordant pairs and adjusts for ties. The coefficient is `(P - Q) / sqrt((P + Q + T)(P + Q + U))`, from `scipy.stats.kendalltau(..., variant="b")`. P and Q are concordant and discordant clip pairs. T counts pairs tied only on the dimension score. U counts pairs tied only on mean enjoyment. Pairs tied on both are in neither count. With no ties this equals tau-a. Positive tau-b means higher scores tend to accompany higher enjoyment. The pairs are not extra independent clips. N is the number of clips.
+
+Spearman is not estimated. Tau-b and Spearman are different scales and are not compared. A constant column makes tau-b undefined. That dimension stays in the Holm family as an internal p of 1, and its coefficient and p-values are reported as unavailable rather than as zero.
 
 Reads `data/metric_scores.csv`, keeping `source_id` as text so values such as `001` and `1` stay distinct. When any `source_id` is blank, fills only those blanks from `data/clip_manifest.csv` after rejecting null, duplicate, or conflicting manifest IDs. Reads `data/human_ratings.csv` when that file exists (`video_id`, `rater_id`, `enjoyment` as integers 1–5).
 
-The correlation family is those six scored columns. Identity, clothes, and anatomy are exclusions, not scored columns, and are not tested. `dynamic_degree` stays in the family; on this pilot it is constant, so Spearman skips it.
+The confirmatory family is every row in `data/dimension_applicability.csv` whose status is `scored`. The notebook reads those rows' `column_name` values in table order. On this pilot those columns are the six VBench 1.0 columns plus `vbench2_human_anatomy`. Identity, clothes, Diversity, and Multi-View Consistency stay out because that table marks them not applicable. `vbench_dynamic_degree` stays in the family when its row is `scored`; on this pilot it is constant, so tau-b is undefined and it enters Holm as an internal p of 1.
 
-This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no correlation claims, and removes a prior `rq1_spearman_results.csv`. Non-numeric and infinite scores are rejected; blank scores stay missing. Clips with fewer than 3 ratings are excluded. Spearman needs at least 4 eligible clips. Dimensions with no score variation are skipped. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist.
+This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no association claims, and removes a prior `rq1_kendall_results.csv` and any leftover `rq1_spearman_results.csv`. Non-numeric and infinite scores are rejected. Blank scores stay missing and are never filled with zero. Scores are not rounded or jittered before ties are judged. Clips with fewer than 3 ratings are excluded. Kendall's tau-b needs at least 4 eligible clips. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist. `unlabeled_pilot` is not treated as a verified shared drama or as evidence that the clips are independent.
+
+Bootstrap 95% percentile intervals resample paired clips with replacement. A replicate that makes either column constant is undefined: it is counted, omitted from the percentiles, and the notebook warns. The interval is reported only when at least 100 replicates are defined; otherwise the limits stay unavailable and the notebook warns. Intervals condition on the observed viewer panel and are not simultaneous family-wide intervals. The permutation test holds metric scores fixed and permutes mean enjoyment. Absolute tau-b is the two-sided statistic. Complete cases of size 7 or fewer (`7! = 5040`) use every enjoyment permutation. Larger samples use Monte Carlo. The Monte Carlo p-value is `(1 + count of |tau| at least the observed |tau|) / (1 + permutations)` and is never zero. Median enjoyment repeats tau-b as a sensitivity check, not as a second confirmatory test.
+
+Defaults are seed 42, 2000 bootstrap replicates, and 4999 Monte Carlo permutations. Override them with `RQ1_SEED`, `RQ1_N_BOOTSTRAP`, and `RQ1_N_PERMUTATIONS`.
 """))
     cells.append(code("""
 from pathlib import Path
 import os
+from itertools import permutations
 import numpy as np
 import pandas as pd
-from scipy.stats import rankdata, spearmanr
+from scipy.stats import kendalltau
 from statsmodels.stats.multitest import multipletests
 
-DIMENSIONS = [
-    "vbench_subject_consistency",
-    "vbench_background_consistency",
-    "vbench_motion_smoothness",
-    "vbench_dynamic_degree",
-    "vbench_aesthetic_quality",
-    "vbench_imaging_quality",
-]
 SCALE_MIN, SCALE_MAX = 1, 5
 MIN_RATERS = 3
 MIN_CLIPS = 4
 ALPHA = 0.05
-N_BOOTSTRAP = 2000
-N_PERMUTATIONS = 4999
-SEED = 42
+DEFAULT_N_BOOTSTRAP = 2000
+DEFAULT_N_PERMUTATIONS = 4999
+DEFAULT_SEED = 42
+# Percentile intervals need this many defined replicates. Fewer stay unavailable.
+MIN_VALID_BOOTSTRAPS = 100
+# 7! = 5040, next to the default Monte Carlo budget. 8! = 40320, so larger n is Monte Carlo.
+EXACT_MAX_N = 7
 PROVISIONAL_SOURCE = "unlabeled_pilot"
-RESULTS_NAME = "rq1_spearman_results.csv"
+RESULTS_NAME = "rq1_kendall_results.csv"
+LEGACY_RESULTS_NAME = "rq1_spearman_results.csv"
+
+
+def configured_int(name, default, minimum):
+    raw = os.environ.get(name)
+    if raw is None or str(raw).strip() == "":
+        return default
+    value = int(raw)
+    if value < minimum:
+        raise ValueError(name + " must be >= " + str(minimum) + ".")
+    return value
+
+
+N_BOOTSTRAP = configured_int("RQ1_N_BOOTSTRAP", DEFAULT_N_BOOTSTRAP, 1)
+N_PERMUTATIONS = configured_int("RQ1_N_PERMUTATIONS", DEFAULT_N_PERMUTATIONS, 1)
+SEED = configured_int("RQ1_SEED", DEFAULT_SEED, 0)
 
 
 def stop(*lines):
     for line in lines:
         print(line)
-    print("No correlation claims were written.")
+    print("No association claims were written.")
 
 
 def clear_prior_results():
-    path = output_dir() / RESULTS_NAME
-    if path.is_file():
-        path.unlink()
-        print("Removed prior " + path.name + ".")
+    folder = output_dir()
+    for name in (RESULTS_NAME, LEGACY_RESULTS_NAME):
+        path = folder / name
+        if path.is_file():
+            path.unlink()
+            print("Removed prior " + path.name + ".")
 
 
 def repo_root():
@@ -1158,12 +1191,65 @@ def output_dir():
     return repo_root() / "rq1_outputs"
 
 
-def spearman_rho(x, y):
-    result = spearmanr(x, y)
+def load_dimensions(folder):
+    path = folder / "dimension_applicability.csv"
+    if not path.is_file():
+        stop(
+            "Missing " + str(path) + ".",
+            "Confirmatory dimensions are the applicability rows whose status is scored.",
+        )
+        return None
+    table = pd.read_csv(path, dtype=str)
+    if not {"status", "column_name"}.issubset(table.columns):
+        raise ValueError(
+            "dimension_applicability.csv needs status and column_name columns."
+        )
+    status = table["status"].astype("string").str.strip()
+    column = clean_id(table["column_name"])
+    scored = status.eq("scored")
+    if int(scored.sum()) == 0:
+        stop(
+            "dimension_applicability.csv has no rows with status scored.",
+            "Confirmatory inference was not run.",
+        )
+        return None
+    names = column.loc[scored]
+    if names.isna().any():
+        raise ValueError(
+            "A scored row in dimension_applicability.csv has a blank column_name."
+        )
+    if names.duplicated().any():
+        raise ValueError(
+            "dimension_applicability.csv repeats a scored column_name."
+        )
+    dimensions = names.astype(str).tolist()
+    print("Confirmatory dimensions: " + ", ".join(dimensions) + ".")
+    return dimensions
+
+
+def kendall_tau_b(x, y):
+    result = kendalltau(np.asarray(x, float), np.asarray(y, float), variant="b")
     stat = getattr(result, "statistic", None)
     if stat is None:
         stat = result.correlation
     return float(stat)
+
+
+def permutation_test(x, y, observed, rng):
+    # Two-sided. Metric scores stay fixed; enjoyment is permuted.
+    # The 1e-12 tolerance only absorbs floating-point noise around equality.
+    threshold = abs(observed) - 1e-12
+    if len(y) <= EXACT_MAX_N:
+        extreme = 0
+        total = 0
+        for perm in permutations(np.asarray(y, float).tolist()):
+            total += 1
+            extreme += abs(kendall_tau_b(x, perm)) >= threshold
+        return extreme / total, "exact"
+    extreme = 0
+    for _ in range(N_PERMUTATIONS):
+        extreme += abs(kendall_tau_b(x, rng.permutation(y))) >= threshold
+    return (extreme + 1) / (N_PERMUTATIONS + 1), "monte_carlo"
 
 
 def clean_id(series):
@@ -1347,6 +1433,11 @@ def clip_table(metrics, ratings):
         + " raters)"
     )
     print("Clips excluded for too few raters: " + str(excluded))
+    if excluded:
+        print(
+            "Excluded video_id values: "
+            + ", ".join(clips.loc[~clips["included"], "video_id"].astype(str))
+        )
     if len(included):
         view_cols = ["video_id", "n_raters", "human_mean", "human_sd"]
         if "source_id" in included.columns:
@@ -1404,67 +1495,72 @@ def confirmatory_block(included):
 
 
 def association(x, y, seed):
-    rng = np.random.default_rng(seed)
     x = np.asarray(x, float)
     y = np.asarray(y, float)
     keep = np.isfinite(x) & np.isfinite(y)
     x, y = x[keep], y[keep]
+    n_unique_x = int(np.unique(x).size) if len(x) else 0
+    n_unique_y = int(np.unique(y).size) if len(y) else 0
     out = {
-        "n": int(len(x)),
-        "rho": np.nan,
-        "ci_low": np.nan,
-        "ci_high": np.nan,
-        "p_raw": np.nan,
-        "valid_bootstraps": 0,
-        "status": "untestable",
+        "n_complete_cases": int(len(x)),
+        "n_unique_metric_values": n_unique_x,
+        "n_unique_enjoyment_values": n_unique_y,
+        "kendall_tau_b": np.nan,
+        "ci_95_lower": np.nan,
+        "ci_95_upper": np.nan,
+        "p_permutation_raw": np.nan,
+        "permutation_method": "not_applicable",
+        "bootstrap_attempted_replicates": 0,
+        "bootstrap_valid_replicates": 0,
+        "bootstrap_undefined_replicates": 0,
+        "analysis_status": "untestable",
     }
     if len(x) == 0:
-        out["status"] = "all_missing"
+        out["analysis_status"] = "all_missing"
         return out
     if len(x) < MIN_CLIPS:
-        out["status"] = "too_few_clips"
+        out["analysis_status"] = "too_few_clips"
         return out
-    if np.unique(x).size < 2 or np.unique(y).size < 2:
-        out["status"] = "no_variation"
+    if n_unique_x < 2 or n_unique_y < 2:
+        out["analysis_status"] = "no_variation"
         return out
-    rx = rankdata(x)
-    ry = rankdata(y)
-    rx = rx - rx.mean()
-    ry = ry - ry.mean()
-    denominator = float(np.linalg.norm(rx) * np.linalg.norm(ry))
-    rho = float(rx @ ry / denominator)
-    extreme = 0
-    for _ in range(N_PERMUTATIONS):
-        perm_rho = float(rx @ rng.permutation(ry) / denominator)
-        extreme += abs(perm_rho) >= abs(rho) - 1e-12
-    boot = []
+    rng = np.random.default_rng(seed)
+    tau_b = kendall_tau_b(x, y)
+    p_raw, method = permutation_test(x, y, tau_b, rng)
+    valid = []
+    undefined = 0
     for _ in range(N_BOOTSTRAP):
         idx = rng.integers(0, len(x), len(x))
-        if np.unique(x[idx]).size > 1 and np.unique(y[idx]).size > 1:
-            boot.append(spearman_rho(x[idx], y[idx]))
-    if len(boot) >= 100:
-        ci_low, ci_high = np.quantile(boot, [0.025, 0.975])
+        if np.unique(x[idx]).size < 2 or np.unique(y[idx]).size < 2:
+            undefined += 1
+            continue
+        valid.append(kendall_tau_b(x[idx], y[idx]))
+    if len(valid) >= MIN_VALID_BOOTSTRAPS:
+        ci_low, ci_high = np.quantile(np.asarray(valid, float), [0.025, 0.975])
     else:
         ci_low, ci_high = np.nan, np.nan
     out.update(
-        rho=rho,
-        ci_low=float(ci_low),
-        ci_high=float(ci_high),
-        p_raw=(extreme + 1) / (N_PERMUTATIONS + 1),
-        valid_bootstraps=len(boot),
-        status="tested",
+        kendall_tau_b=tau_b,
+        ci_95_lower=float(ci_low),
+        ci_95_upper=float(ci_high),
+        p_permutation_raw=float(p_raw),
+        permutation_method=method,
+        bootstrap_attempted_replicates=N_BOOTSTRAP,
+        bootstrap_valid_replicates=len(valid),
+        bootstrap_undefined_replicates=undefined,
+        analysis_status="tested",
     )
     return out
 
 
-def median_rho(x, y):
+def median_tau_b(x, y):
     x = np.asarray(x, float)
     y = np.asarray(y, float)
     keep = np.isfinite(x) & np.isfinite(y)
     x, y = x[keep], y[keep]
     if len(x) < MIN_CLIPS or np.unique(x).size < 2 or np.unique(y).size < 2:
         return np.nan
-    return spearman_rho(x, y)
+    return kendall_tau_b(x, y)
 
 
 def fmt(value, digits):
@@ -1473,28 +1569,36 @@ def fmt(value, digits):
     return format(float(value), "." + str(digits) + "f")
 
 
-def analyze(included):
+def empty_result(dimension, n_eligible, status, n_missing):
+    return {
+        "dimension": dimension,
+        "analysis_status": status,
+        "n_eligible_clips": n_eligible,
+        "n_complete_cases": 0,
+        "n_missing_metric": n_missing,
+        "n_unique_metric_values": 0,
+        "n_unique_enjoyment_values": 0,
+        "kendall_tau_b": np.nan,
+        "ci_95_lower": np.nan,
+        "ci_95_upper": np.nan,
+        "p_permutation_raw": np.nan,
+        "p_permutation_holm": np.nan,
+        "permutation_method": "not_applicable",
+        "bootstrap_attempted_replicates": 0,
+        "bootstrap_valid_replicates": 0,
+        "bootstrap_undefined_replicates": 0,
+        "kendall_tau_b_median": np.nan,
+        "reject_holm": False,
+    }
+
+
+def analyze(included, dimensions):
     n_eligible = len(included)
     rows = []
     p_for_holm = []
-    for i, dimension in enumerate(DIMENSIONS):
+    for i, dimension in enumerate(dimensions):
         if dimension not in included.columns:
-            rows.append({
-                "dimension": dimension,
-                "n": 0,
-                "n_missing": n_eligible,
-                "missing_fraction": 1.0,
-                "rho": np.nan,
-                "ci_low": np.nan,
-                "ci_high": np.nan,
-                "p_raw": np.nan,
-                "p_holm": np.nan,
-                "rho_median": np.nan,
-                "valid_bootstraps": 0,
-                "status": "missing_column",
-                "reject_holm": False,
-                "n_eligible": n_eligible,
-            })
+            rows.append(empty_result(dimension, n_eligible, "missing_column", n_eligible))
             p_for_holm.append(1.0)
             continue
         x = parse_score_column(included[dimension], dimension)
@@ -1502,84 +1606,123 @@ def analyze(included):
         result = association(x, included["human_mean"], SEED + i)
         result.update(
             dimension=dimension,
-            n_missing=n_missing,
-            missing_fraction=(n_missing / n_eligible) if n_eligible else np.nan,
-            rho_median=median_rho(x, included["human_median"]) if result["status"] == "tested" else np.nan,
-            n_eligible=n_eligible,
-            p_holm=np.nan,
+            n_missing_metric=n_missing,
+            n_eligible_clips=n_eligible,
+            kendall_tau_b_median=(
+                median_tau_b(x, included["human_median"])
+                if result["analysis_status"] == "tested"
+                else np.nan
+            ),
+            p_permutation_holm=np.nan,
             reject_holm=False,
         )
         rows.append(result)
-        p_for_holm.append(result["p_raw"] if result["status"] == "tested" else 1.0)
+        # Untestable prespecified dimensions stay in the family as p = 1.
+        # Their displayed p-values remain unavailable.
+        p_for_holm.append(
+            result["p_permutation_raw"] if result["analysis_status"] == "tested" else 1.0
+        )
     _reject, adjusted, _a, _b = multipletests(p_for_holm, alpha=ALPHA, method="holm")
     for row, p_adj, reject in zip(rows, adjusted, _reject):
-        if row["status"] == "tested":
-            row["p_holm"] = float(p_adj)
+        if row["analysis_status"] == "tested":
+            row["p_permutation_holm"] = float(p_adj)
             row["reject_holm"] = bool(reject)
     return pd.DataFrame(rows)
 
 
-def print_results(results):
-    n_eligible = int(results["n_eligible"].iloc[0]) if len(results) else 0
-    print("Eligible clips N = " + str(n_eligible))
+def print_results(results, dimensions):
+    n_eligible = int(results["n_eligible_clips"].iloc[0]) if len(results) else 0
+    print("Eligible clips N = " + str(n_eligible) + ". n on each row is complete cases.")
     print(
         "Seed = "
         + str(SEED)
-        + ". Resamples: "
+        + ". Bootstrap replicates = "
         + str(N_BOOTSTRAP)
-        + " bootstrap, "
+        + ". Monte Carlo permutations = "
         + str(N_PERMUTATIONS)
-        + " permutations."
+        + ". Exact enumeration when complete cases <= "
+        + str(EXACT_MAX_N)
+        + "."
     )
     print("Tested dimensions:")
-    tested = results.loc[results["status"].eq("tested")]
+    tested = results.loc[results["analysis_status"].eq("tested")]
     if tested.empty:
         print("(none)")
     for row in tested.itertuples(index=False):
+        if row.bootstrap_undefined_replicates:
+            print(
+                "Warning: "
+                + row.dimension
+                + " had "
+                + str(int(row.bootstrap_undefined_replicates))
+                + " undefined bootstrap replicates out of "
+                + str(int(row.bootstrap_attempted_replicates))
+                + "."
+            )
+        if row.bootstrap_valid_replicates < MIN_VALID_BOOTSTRAPS:
+            print(
+                "Warning: "
+                + row.dimension
+                + " bootstrap interval is unavailable ("
+                + str(int(row.bootstrap_valid_replicates))
+                + " valid replicates; at least "
+                + str(MIN_VALID_BOOTSTRAPS)
+                + " are required)."
+            )
         print(
             row.dimension
             + "  n="
-            + str(int(row.n))
+            + str(int(row.n_complete_cases))
             + "  missing="
-            + str(int(row.n_missing))
+            + str(int(row.n_missing_metric))
             + "/"
             + str(n_eligible)
-            + "  rho="
-            + fmt(row.rho, 3)
+            + "  kendall_tau_b="
+            + fmt(row.kendall_tau_b, 3)
             + "  CI=["
-            + fmt(row.ci_low, 3)
+            + fmt(row.ci_95_lower, 3)
             + ", "
-            + fmt(row.ci_high, 3)
-            + "]  p_raw="
-            + fmt(row.p_raw, 4)
-            + "  p_holm="
-            + fmt(row.p_holm, 4)
-            + "  rho_median="
-            + fmt(row.rho_median, 3)
+            + fmt(row.ci_95_upper, 3)
+            + "]  p_permutation_raw="
+            + fmt(row.p_permutation_raw, 4)
+            + "  p_permutation_holm="
+            + fmt(row.p_permutation_holm, 4)
+            + "  kendall_tau_b_median="
+            + fmt(row.kendall_tau_b_median, 3)
+            + "  permutation="
+            + row.permutation_method
+            + "  bootstrap_valid="
+            + str(int(row.bootstrap_valid_replicates))
+            + "  bootstrap_undefined="
+            + str(int(row.bootstrap_undefined_replicates))
         )
     print("Skipped dimensions:")
-    skipped = results.loc[~results["status"].eq("tested")]
+    skipped = results.loc[~results["analysis_status"].eq("tested")]
     if skipped.empty:
         print("(none)")
     for row in skipped.itertuples(index=False):
         print(
             row.dimension
             + "  n="
-            + str(int(row.n))
+            + str(int(row.n_complete_cases))
             + "  missing="
-            + str(int(row.n_missing))
+            + str(int(row.n_missing_metric))
             + "/"
             + str(n_eligible)
             + "  status="
-            + row.status
+            + row.analysis_status
         )
     print(
         "Holm family size = "
-        + str(len(DIMENSIONS))
-        + " (untestable dimensions enter as p = 1). "
-        + "CIs are marginal paired-clip bootstrap 95% intervals. "
-        + "p_raw is a two-sided permutation p. "
-        + "rho_median is a sensitivity check, not a second confirmatory test. "
+        + str(len(dimensions))
+        + ". Untestable prespecified dimensions enter the correction as p = 1, "
+        + "and their coefficient and p-values are reported as unavailable. "
+        + "CIs are marginal paired-clip bootstrap 95% percentile intervals, "
+        + "not simultaneous family-wide intervals. "
+        + "They condition on the observed viewer panel. "
+        + "p_permutation_raw is a two-sided exact or Monte Carlo permutation p "
+        + "and is never zero. "
+        + "kendall_tau_b_median repeats tau-b on median enjoyment and is not a second confirmatory test. "
         + "Associations are not causal."
     )
 
@@ -1590,18 +1733,22 @@ def write_results(results):
     path = folder / RESULTS_NAME
     columns = [
         "dimension",
-        "n_eligible",
-        "n",
-        "n_missing",
-        "missing_fraction",
-        "rho",
-        "ci_low",
-        "ci_high",
-        "p_raw",
-        "p_holm",
-        "rho_median",
-        "status",
-        "valid_bootstraps",
+        "analysis_status",
+        "n_eligible_clips",
+        "n_complete_cases",
+        "n_missing_metric",
+        "n_unique_metric_values",
+        "n_unique_enjoyment_values",
+        "kendall_tau_b",
+        "ci_95_lower",
+        "ci_95_upper",
+        "p_permutation_raw",
+        "p_permutation_holm",
+        "permutation_method",
+        "bootstrap_attempted_replicates",
+        "bootstrap_valid_replicates",
+        "bootstrap_undefined_replicates",
+        "kendall_tau_b_median",
         "reject_holm",
     ]
     results[columns].to_csv(path, index=False)
@@ -1622,7 +1769,7 @@ def main():
     included = clip_table(metrics, ratings)
     if len(included) < MIN_CLIPS:
         stop(
-            "Spearman needs at least "
+            "Kendall's tau-b needs at least "
             + str(MIN_CLIPS)
             + " eligible clips; found "
             + str(len(included))
@@ -1634,8 +1781,11 @@ def main():
     if blocked:
         stop(*blocked)
         return
-    results = analyze(included)
-    print_results(results)
+    dimensions = load_dimensions(folder)
+    if dimensions is None:
+        return
+    results = analyze(included, dimensions)
+    print_results(results, dimensions)
     write_results(results)
 
 
@@ -1645,5 +1795,4 @@ main()
 
 
 if __name__ == "__main__":
-    build_scoring_notebook()
     build_association_notebook()

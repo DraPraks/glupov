@@ -60,9 +60,9 @@ VBench (official custom-input supported):
 - `aesthetic_quality`
 - `imaging_quality`
 
-The confirmatory set is those six VBench 1.0 dimensions. Column names are `vbench_` plus the dimension name.
+The confirmatory set is every row in `data/dimension_applicability.csv` with status `scored`: those six VBench 1.0 dimensions plus VBench-2.0 `Human_Anatomy` (`vbench2_human_anatomy`). Column names for the VBench 1.0 dimensions are `vbench_` plus the dimension name.
 
-VBench-2.0 `Human_Identity` and `Human_Clothes` are excluded for this multi-person pilot: both score one person, and the drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. `data/dimension_applicability.csv` marks identity and clothes `not_applicable_multi_person`. Their columns in `data/metric_scores.csv` stay blank. `Human_Anatomy` looks at each person. The scoring notebook writes it to `vbench2_human_anatomy`, which is empty until the next Colab run. That column is outside the six-dimension confirmatory set.
+VBench-2.0 `Human_Identity` and `Human_Clothes` are excluded for this multi-person pilot: both score one person, and the drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. `data/dimension_applicability.csv` marks identity and clothes `not_applicable_multi_person`. Their columns in `data/metric_scores.csv` stay blank. `Human_Anatomy` looks at each person and is `scored` in that table, so `vbench2_human_anatomy` is in the confirmatory set.
 
 `dynamic_degree` is in the set. On this pilot it is 1 for every clip, so Kendall's tau-b is undefined until the column varies.
 
@@ -91,12 +91,12 @@ For each dimension \( j \):
 
 **Uncertainty and inference:**
 
-- Bootstrap 95% percentile confidence intervals (resample paired clip observations with replacement; condition on observed viewer panel).
-- Two-sided Monte Carlo (or exact, for small N) permutation tests of the null of no association.
-- Holm correction across the family of selected dimensions.
-- Report \( N \) (eligible clips), \(\tau_b\), 95% CI, raw and Holm-adjusted p-values, and missingness per dimension.
+- Bootstrap 95% percentile confidence intervals. Resample paired clip rows with replacement and recalculate \(\tau_b\). A replicate that makes either column constant is undefined: count it, leave it out of the percentiles, and warn. Report the interval only when at least 100 replicates are defined; otherwise the limits are unavailable and the notebook warns. Intervals condition on the observed viewer panel and are not simultaneous family-wide intervals.
+- Two-sided permutation tests of no association. Hold the dimension scores fixed and permute mean enjoyment. The test statistic is absolute \(\tau_b\). When the complete-case count is 7 or fewer, enumerate every enjoyment permutation (`7! = 5040`). For larger counts, use Monte Carlo. The Monte Carlo p-value is \((1 + \#\{|\tau| \ge |\tau_{\mathrm{obs}}|\}) / (1 + \text{permutations})\) and is never zero. The default is 4999 permutations and seed 42. Both are configurable, as is the bootstrap replicate count.
+- Holm correction across the scored dimensions in `data/dimension_applicability.csv` (the six VBench 1.0 columns plus `vbench2_human_anatomy`), \(\alpha = 0.05\). A prespecified dimension that is untestable is entered as \(p = 1\) so the family is not shrunk. Its coefficient, raw p-value, and adjusted p-value are reported as unavailable, with a status, not as zero. Identity, clothes, Diversity, and Multi-View Consistency are not in this family.
+- Report eligible clips, complete cases, unique values, \(\tau_b\), 95% CI, raw and Holm-adjusted permutation p-values, whether the permutation result is exact or Monte Carlo, bootstrap valid and undefined counts, and missingness per dimension.
 
-**Sensitivity:** Repeat with median enjoyment instead of mean.
+**Sensitivity:** Repeat \(\tau_b\) with median enjoyment instead of the mean. That check is not a second confirmatory test. Spearman is not estimated. Tau-b and Spearman use different scales and are not compared.
 
 **Interpretation notes:**
 
@@ -104,13 +104,14 @@ For each dimension \( j \):
 - Close \(\tau_b\) values should not be over-ranked.
 - Largest \( |\tau_b| \) does not by itself prove one dimension is stronger than others in the population.
 - More viewers improve the estimate of each clip’s mean enjoyment but do not increase the number of independent clip-level observations.
+- The pairs counted by \(\tau_b\) are not additional independent clips. A constant dimension, noisy ranks, or a restricted score range are not fixed by the choice of coefficient.
 
 **Optional extensions (not required for primary RQ1):**
 
 - Ordinal mixed-effects regression to examine conditional associations while accounting for viewer and video random effects.
 - Predictive evaluation via cross-validation that holds out entire videos.
 
-**Implementation note:** A Jupyter notebook exists for the statistical pipeline (loading, aggregation, Kendall's tau-b + bootstrap + permutation + Holm, plots, sensitivity). Scoring is a separate notebook. It writes VBench / VBench-2.0 custom-input scores to `metric_scores.csv`. The association notebook still computes Spearman and must be switched to `scipy.stats.kendalltau` (`variant='b'`) before any coefficient is reported.
+**Implementation note:** `notebooks/rq1-aidrama.ipynb` loads the CSVs, aggregates enjoyment, and computes Kendall's tau-b with `scipy.stats.kendalltau` (`variant='b'`), plus the bootstrap, permutation test, Holm correction, and median sensitivity above. Scoring is a separate notebook. It writes VBench / VBench-2.0 custom-input scores to `metric_scores.csv`. The association notebook does not score clips. It does not report a coefficient while enjoyment ratings or real drama IDs are still blocked.
 
 ## RQ2 Methodology
 
@@ -247,7 +248,7 @@ Suggested summary phrasing: “The LMM showed [observed rank association] and [o
 - Clip-level bootstrap intervals condition on the observed viewer panel.
 - NLI and aspect extraction require human validation; automated steps alone are insufficient for strong claims.
 - VBench custom-input covers only a subset of dimensions; results are not full leaderboard evaluations.
-- `Human_Identity` and `Human_Clothes` score one person. Identity keeps a clip only when the opening frame shows exactly one face and at least 20 frames do. Clothes asks whether only one person is present throughout and leaves the clip unscored otherwise. This multi-person pilot excludes both. `data/metric_scores.csv` leaves those columns blank, and `data/dimension_applicability.csv` marks them `not_applicable_multi_person`. `Human_Anatomy` looks at each person in a frame. The scoring notebook installs the CUDA `mmcv` wheel for the current Colab PyTorch and writes `vbench2_human_anatomy`. The committed column is empty until that Colab run. That column stays out of the confirmatory association set.
+- `Human_Identity` and `Human_Clothes` score one person. Identity keeps a clip only when the opening frame shows exactly one face and at least 20 frames do. Clothes asks whether only one person is present throughout and leaves the clip unscored otherwise. This multi-person pilot excludes both. `data/metric_scores.csv` leaves those columns blank, and `data/dimension_applicability.csv` marks them `not_applicable_multi_person`. `Human_Anatomy` looks at each person in a frame. The scoring notebook installs the CUDA `mmcv` wheel for the current Colab PyTorch and writes `vbench2_human_anatomy`. That column is scored and is in the confirmatory association set.
 - Precedent exists for testing automated enjoyment prediction against human references (e.g., Marcinek et al., 2025, SIGDIAL), but aspect coverage + claim-level NLI are additional methods proposed here and must be validated in this study.
 
 ## Pilot Status (November 2026)
@@ -256,12 +257,12 @@ The six files `dataset/drama_clip_01.mp4` through `drama_clip_06.mp4` are compil
 
 - Every clip is `source_id = unlabeled_pilot`. Drama grouping is unknown, so these clips are not an independent set. Confirmatory clip-level Kendall's tau-b stays off until real drama IDs exist, or the analysis is cluster-aware.
 - Six VBench 1.0 dimensions were scored and written to `data/metric_scores.csv`, with `data/clip_manifest.csv` and `data/dimension_applicability.csv`. `dynamic_degree` is 1 for every clip, so tau-b is undefined for that column. Imaging quality is a per-clip MUSIQ mean (about 50–74), not a 0–1 score. Tau-b is still valid when a column varies, including columns with ties.
-- `vbench2_human_identity` and `vbench2_human_clothes` are blank. Both dimensions are `not_applicable_multi_person` in `data/dimension_applicability.csv` because these clips show several people. `vbench2_human_anatomy` is empty. The scoring notebook fills that column on the next Colab run and leaves a column unchanged once every clip already has a score.
+- `vbench2_human_identity` and `vbench2_human_clothes` are blank. Both dimensions are `not_applicable_multi_person` in `data/dimension_applicability.csv` because these clips show several people. `vbench2_human_anatomy` is scored. The applicability table marks it `scored`, and the association family includes that column. The scoring notebook leaves a column unchanged once every clip already has a score.
 - Human enjoyment is not in the files. Ratings will be entered by hand from Google Docs into `data/human_ratings.csv`. Do not invent placeholder ratings. `notebooks/rq1-aidrama.ipynb` runs confirmatory association only after both real ratings and real drama IDs are present. Scoring lives in `notebooks/vbench_score_clips.ipynb`.
 
 ## Implementation Status Notes
 
-- RQ1 association notebook (`notebooks/rq1-aidrama.ipynb`) still runs Spearman, bootstrap, permutation, Holm, and median sensitivity. The decided coefficient is Kendall's tau-b. Switch that notebook before reporting a number. It loads `data/metric_scores.csv` and runs confirmatory tests only when real enjoyment ratings and real drama IDs are present.
+- RQ1 association notebook (`notebooks/rq1-aidrama.ipynb`) computes Kendall's tau-b with `scipy.stats.kendalltau` (`variant='b'`), bootstrap, permutation, Holm, and median sensitivity. It loads `data/metric_scores.csv` and runs confirmatory tests only when real enjoyment ratings and real drama IDs are present. The unlabeled pilot does not produce those numbers.
 - RQ1 scoring notebook (`notebooks/vbench_score_clips.ipynb`) builds `data/clip_manifest.csv` and official custom-input scores. The local 16 GB laptop run produced empty scores. The six VBench 1.0 columns above came from a Colab A100 run. The same notebook now also scores `vbench2_human_anatomy` on that runtime.
 - RQ2 requires collection pipelines for human and LMM evaluations, aspect extraction (manual or assisted), coverage calculation, NLI inference, and multi-level aggregation.
 - With this six-clip pilot, treat numeric output as a pipeline test only. Skip inferential claims.
