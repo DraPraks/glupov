@@ -1,7 +1,8 @@
 # Regenerable VBench working files
 data/vbench_raw/
 data/staged_clips/
-rq1_outputs/
+rq1_outputs/*
+!rq1_outputs/rq1_kendall_results.csv
 rq1_outputs_demo/
 
 # Python / local
