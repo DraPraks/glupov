@@ -279,7 +279,10 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
     def test_committed_survey_ratings_shape(self):
         path = ROOT / "data" / "human_ratings.csv"
         frame = pd.read_csv(path, dtype={"video_id": str, "rater_id": str})
-        self.assertEqual(list(frame.columns), ["video_id", "rater_id", "enjoyment"])
+        self.assertEqual(
+            list(frame.columns),
+            ["video_id", "rater_id", "enjoyment", "partial_watch"],
+        )
         self.assertEqual(len(frame), 290)
         self.assertEqual(
             set(frame["video_id"]),
@@ -296,6 +299,9 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         enjoyment = pd.to_numeric(frame["enjoyment"])
         self.assertTrue(enjoyment.between(1, 5).all())
         self.assertTrue((enjoyment % 1 == 0).all())
+        partial = pd.to_numeric(frame["partial_watch"])
+        self.assertTrue(partial.isin([0, 1]).all())
+        self.assertEqual(int(partial.sum()), 30)
 
     def test_missing_metric_scores_stops(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -46,7 +46,7 @@ Clip columns in the survey run from Clip 01 through Clip 10. There is no Clip 11
 | drama_clip_09 | drama_09 | 29 | 3.034 | 1.117 | 5 |
 | drama_clip_10 | drama_10 | 29 | 3.241 | 0.988 | 4 |
 
-A partial watch is a respondent–clip cell where the answer to “Did you watch the video in its entirety?” was No. All 30 of those cells had enjoyment in 1–5, and all 30 stayed in the mean. The 30 cells come from 8 of the 29 respondents.
+A partial watch is a respondent–clip cell where the answer to “Did you watch the video in its entirety?” was No. All 30 of those cells had enjoyment in 1–5, and all 30 stayed in the mean. The 30 cells come from 8 of the 29 respondents. In `data/human_ratings.csv` those rows are `partial_watch` 1, and the other 260 rows are 0. The association notebook does not read that column.
 
 VBench floats in `data/metric_scores.csv` were not changed.
 
@@ -96,7 +96,7 @@ The sensitivity check repeats tau-b with the clip median instead of the mean. It
 
 ## Reading the pilot
 
-No scored dimension’s permutation test rejects a null of no association with mean enjoyment after Holm at 0.05. The largest tau-b among defined coefficients is aesthetic quality, 0.26967994498529685, then imaging quality, 0.22473328748774737. Subject consistency and human anatomy share tau-b -0.08989331499509895. Background consistency is 0.08989331499509895. Motion smoothness is -0.13483997249264842. With 10 clips, the intervals are wide.
+None of the scored dimensions is significant after Holm at 0.05. The largest tau-b among defined coefficients is aesthetic quality, 0.26967994498529685, then imaging quality, 0.22473328748774737. Subject consistency and human anatomy share tau-b -0.08989331499509895. Background consistency is 0.08989331499509895. Motion smoothness is -0.13483997249264842. With 10 clips, the intervals are wide.
 
 The pairs inside tau-b are not extra independent clips. More raters tighten each clip mean. They do not raise the number of clip-level observations above 10. The intervals condition on this panel. The associations are not causal. Nonsignificance is not evidence that an association is absent.
 
