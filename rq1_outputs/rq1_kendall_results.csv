@@ -1,0 +1,8 @@
+dimension,analysis_status,n_eligible_clips,n_complete_cases,n_missing_metric,n_unique_metric_values,n_unique_enjoyment_values,kendall_tau_b,ci_95_lower,ci_95_upper,p_permutation_raw,p_permutation_holm,permutation_method,bootstrap_attempted_replicates,bootstrap_valid_replicates,bootstrap_undefined_replicates,kendall_tau_b_median,reject_holm
+vbench_subject_consistency,tested,10,10,0,10,9,-0.08989331499509895,-0.6585365853658537,0.46173336783101965,0.804,1.0,monte_carlo,2000,2000,0,,False
+vbench_background_consistency,tested,10,10,0,10,9,0.08989331499509895,-0.4361119579623079,0.6216443749874531,0.7834,1.0,monte_carlo,2000,2000,0,,False
+vbench_motion_smoothness,tested,10,10,0,10,9,-0.13483997249264842,-0.7948717948717948,0.4014775342734831,0.667,1.0,monte_carlo,2000,2000,0,,False
+vbench_dynamic_degree,no_variation,10,10,0,1,9,,,,,,not_applicable,0,0,0,,False
+vbench_aesthetic_quality,tested,10,10,0,10,9,0.26967994498529685,-0.4146341463414634,0.7948717948717948,0.3176,1.0,monte_carlo,2000,2000,0,,False
+vbench_imaging_quality,tested,10,10,0,10,9,0.22473328748774737,-0.42128667156473765,0.8111666584329661,0.4336,1.0,monte_carlo,2000,2000,0,,False
+vbench2_human_anatomy,tested,10,10,0,10,9,-0.08989331499509895,-0.7,0.4618016825408862,0.7868,1.0,monte_carlo,2000,2000,0,,False

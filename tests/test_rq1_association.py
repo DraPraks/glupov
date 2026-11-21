@@ -1,7 +1,8 @@
 """Behavior of notebooks/rq1-aidrama.ipynb.
 
-Ratings live only in temp dirs. They are code fixtures, not study data, and
-these tests do not report a confirmatory RQ1 result.
+Association checks use ratings in temp dirs. Those fixtures are not study
+data, and these tests do not report a confirmatory RQ1 result. One test
+checks only the shape of the committed anonymous ratings file.
 """
 
 import importlib.util
@@ -257,10 +258,14 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         self.assertIn('status.eq("scored")', text)
         self.assertIn("column_name", text)
 
-    def test_repo_ratings_absent_writes_nothing(self):
-        self.assertFalse((ROOT / "data" / "human_ratings.csv").exists())
-        before = set(os.listdir(ROOT))
-        proc = run_notebook(None, None, cwd=ROOT / "notebooks", clear_data_env=True)
+    def test_missing_ratings_file_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            data = tmp / "data"
+            copy_metrics(data)
+            self.assertFalse((data / "human_ratings.csv").exists())
+            proc = run_notebook(data, tmp / "out")
+            self.assertFalse((tmp / "out" / "rq1_kendall_results.csv").exists())
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("human_ratings.csv", proc.stdout)
         self.assertIn("Enjoyment has not been collected.", proc.stdout)
@@ -269,10 +274,34 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         self.assertNotIn("kendall_tau_b=", proc.stdout)
         self.assertNotIn("Tested dimensions:", proc.stdout)
         self.assertNotIn("p_permutation_holm", proc.stdout)
-        self.assertFalse((ROOT / "data" / "human_ratings.csv").exists())
-        self.assertFalse((ROOT / "rq1_outputs").exists())
-        self.assertEqual(set(os.listdir(ROOT)), before)
         self.assertEqual(proc.stdout.count("No association claims were written."), 1)
+
+    def test_committed_survey_ratings_shape(self):
+        path = ROOT / "data" / "human_ratings.csv"
+        frame = pd.read_csv(path, dtype={"video_id": str, "rater_id": str})
+        self.assertEqual(
+            list(frame.columns),
+            ["video_id", "rater_id", "enjoyment", "partial_watch"],
+        )
+        self.assertEqual(len(frame), 290)
+        self.assertEqual(
+            set(frame["video_id"]),
+            {f"drama_clip_{i:02d}" for i in range(1, 11)},
+        )
+        self.assertNotIn("drama_clip_11", set(frame["video_id"]))
+        self.assertEqual(
+            sorted(frame["rater_id"].unique()),
+            [f"r{i:02d}" for i in range(1, 30)],
+        )
+        self.assertFalse(frame.duplicated(["video_id", "rater_id"]).any())
+        self.assertTrue((frame.groupby("video_id").size() == 29).all())
+        self.assertTrue((frame.groupby("rater_id").size() == 10).all())
+        enjoyment = pd.to_numeric(frame["enjoyment"])
+        self.assertTrue(enjoyment.between(1, 5).all())
+        self.assertTrue((enjoyment % 1 == 0).all())
+        partial = pd.to_numeric(frame["partial_watch"])
+        self.assertTrue(partial.isin([0, 1]).all())
+        self.assertEqual(int(partial.sum()), 30)
 
     def test_missing_metric_scores_stops(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -313,7 +342,7 @@ class Rq1AssociationNotebookTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             data = tmp / "data"
-            frame = copy_metrics(data)
+            frame = copy_metrics(data, source_ids=["unlabeled_pilot"] * n_videos())
             write_ratings(
                 data / "human_ratings.csv",
                 list(frame["video_id"]),
