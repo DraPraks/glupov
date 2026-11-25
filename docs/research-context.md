@@ -10,13 +10,11 @@
 
 The clip is the unit of analysis for rating comparisons. Aggregate valid human ratings to a clip mean, sample standard deviation, and rater count. Keep the individual ratings and explanations for human–human comparisons and analysis of stated reasons.
 
-Clip-level inference assumes the clips are independent. If clips share a source drama, use one clip per source or account for clustering in the analysis. Record source provenance and check for repeated `source_id` values.
-
 For RQ2, give viewers and the LMM the same clips, comparable audiovisual information, and a common 1–5 enjoyment scale. Use shared anchors such as 1 for “not enjoyable at all” and 5 for “extremely enjoyable.” Collect the LMM response without exposing human responses or VBench scores. Fix the evaluation rules and exclusions before examining associations. [RQ2 viewer prompt](../rq2_prompts/viewer.md)
 
 ## 3. RQ1 analysis
 
-The completed class study scored 11 clips across seven dimensions. Twenty-nine viewers rated each of clips 01–10. The association notebook paired scores with average enjoyment by `video_id` and estimated Kendall’s tau-b for each testable dimension. The source IDs are distinct placeholders, so the analysis assumes the rated clips are independent. [RQ1 summary](rq1_summary.md) · [Results CSV](../rq1_outputs/rq1_kendall_results.csv)
+The completed class study scored 11 clips across seven dimensions. Twenty-nine viewers rated each of clips 01–10. The association notebook paired scores with average enjoyment by `video_id` and estimated Kendall’s tau-b for each testable dimension. [RQ1 summary](rq1_summary.md) · [Results CSV](../rq1_outputs/rq1_kendall_results.csv)
 
 Possible extensions include estimating conditional associations with an ordinal mixed-effects model that accounts for viewers and clips, or evaluating predictive performance on held-out clips.
 
@@ -100,7 +98,7 @@ Related work has evaluated LLM enjoyment estimates against human self-reports in
 
 ## 5. Reporting checklist
 
-- Give clip and viewer counts, source sampling, scale anchors, and prompt text.
+- Describe clip and viewer sampling, including counts, scale anchors, and prompt text.
 - Record metric and model versions, configurations, repository revisions, and the rationale for the selected dimensions or taxonomy.
 - Report exclusions, missing values, undefined cases, estimates, intervals, and adjusted p-values where applicable.
-- Describe the assumptions about independent clips and the viewer panel. For RQ2, also report coding and label validation and the human–human baselines.
+- For RQ2, report coding and label validation and the human–human baselines.

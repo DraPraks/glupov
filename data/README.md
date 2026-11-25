@@ -9,4 +9,4 @@
 | `vbench_raw/` | scoring notebook | Regenerable JSON |
 | `staged_clips/` | scoring notebook | Regenerable staged mp4/gif copies |
 
-The `source_id` values `drama_01`–`drama_11` are placeholders (`source_id_basis` is `placeholder`). `human_ratings.csv` contains the anonymous survey ratings for clips 01–10 and replaces the earlier placeholder ratings. Clip 11 has saved VBench scores and no survey ratings. [RQ1 summary](../docs/rq1_summary.md) · [Results CSV](../rq1_outputs/rq1_kendall_results.csv)
+`human_ratings.csv` contains the anonymous survey ratings for clips 01–10. Clip 11 has saved VBench scores and no survey ratings. [RQ1 summary](../docs/rq1_summary.md) · [Results CSV](../rq1_outputs/rq1_kendall_results.csv)

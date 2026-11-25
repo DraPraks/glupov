@@ -20,11 +20,11 @@ flowchart TD
     scoring --> applicability["dimension_applicability.csv"]
 ```
 
-The scoring notebook reads the videos in `dataset/` and records each clip’s `video_id`, file path, duration, and `source_id` in the clip manifest. It uses custom-input mode and writes one row of scores per clip. It reuses saved columns that already have a score for every clip. Missing scores stay blank. [Scoring notebook](../notebooks/vbench_score_clips.ipynb) · [Clip manifest](../data/clip_manifest.csv) · [Metric scores CSV](../data/metric_scores.csv)
+The scoring notebook reads the videos in `dataset/` and records each clip’s `video_id`, file path, and duration in the clip manifest. It uses custom-input mode and writes one row of scores per clip. It reuses saved columns that already have a score for every clip. Missing scores stay blank. [Scoring notebook](../notebooks/vbench_score_clips.ipynb) · [Clip manifest](../data/clip_manifest.csv) · [Metric scores CSV](../data/metric_scores.csv)
 
 The applicability table marks seven dimensions as `scored`. Six come from VBench 1.0 (subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality). The seventh is VBench-2.0 human anatomy. Human identity and clothing require single-person clips. Diversity requires multiple clips for the same prompt, and multi-view consistency requires multiple views. [Applicability table](../data/dimension_applicability.csv)
 
-Write the score columns as a matrix $M=(M_{ij})$ with $N$ rows for scored clips and $d$ columns for metric dimensions. Use `video_id` as the row key and `source_id` as metadata. The study has $N=11$ and $d=7$, with a score in every cell, so $M\in\mathbb R^{11\times7}$.
+Write the score columns as a matrix $M=(M_{ij})$ with $N$ rows for scored clips and $d$ columns for metric dimensions. Use `video_id` as the row key. The study has $N=11$ and $d=7$, with a score in every cell, so $M\in\mathbb R^{11\times7}$.
 
 The recorded Colab run used an **NVIDIA A100-SXM4 80 GB GPU** and **about 170 GiB of system RAM**. The notebook logged 79.3 GiB of GPU memory and 167.1 GiB of system RAM. This run reused the six saved VBench 1.0 columns and scored VBench-2.0 human anatomy. [Scoring notebook](../notebooks/vbench_score_clips.ipynb)
 
@@ -39,8 +39,7 @@ flowchart TD
     ratings["human_ratings.csv"] --> summary["Validate and aggregate available ratings by clip"]
     summary --> joined["Join by video_id and keep clips with at least 3 ratings"]
     metrics["Read score matrix M from metric_scores.csv"] --> joined
-    joined --> sources["Check source labels on eligible clips"]
-    sources --> pairs["Pair each column of X with enjoyment on complete rows"]
+    joined --> pairs["Pair each column of X with enjoyment on complete rows"]
     applicability["dimension_applicability.csv"] --> pairs
     pairs --> tau["Calculate Kendall's tau-b with mean enjoyment"]
     tau --> inference["Bootstrap intervals and calculate permutation p-values"]
@@ -137,12 +136,12 @@ Dynamic degree was constant at 1.0, so its association was undefined. Every clip
 
 None of the tested dimensions reached statistical significance after Holm correction. Aesthetic quality and imaging quality had the largest positive estimates. The intervals remain compatible with both positive and negative associations, so the direction and strength of the relationships remain uncertain.
 
-The 290 ratings were used to estimate enjoyment for 10 clips. The bootstrap intervals reflect uncertainty across clips for this viewer panel. The notebook checks for missing or repeated source IDs and a provisional source label. The distinct placeholder IDs in this study pass those checks, leaving clip independence as an assumption. [Clip manifest](../data/clip_manifest.csv) · [Association notebook](../notebooks/rq1-aidrama.ipynb)
+The 290 ratings were used to estimate enjoyment for 10 clips. The bootstrap intervals reflect uncertainty across clips for this viewer panel.
 
 ## 6. Reproduce the analysis
 
-1. Use the checked-in `metric_scores.csv`, `dimension_applicability.csv`, and `human_ratings.csv` in `data/`. The notebook uses `clip_manifest.csv` as a fallback for missing source IDs. [Data files](../data/README.md)
+1. Use the checked-in `metric_scores.csv`, `dimension_applicability.csv`, and `human_ratings.csv` in `data/`. [Data files](../data/README.md)
 2. Run all cells of `rq1-aidrama.ipynb` from the repository root or `notebooks/` in a Python environment with NumPy, pandas, SciPy, and statsmodels. [Association notebook](../notebooks/rq1-aidrama.ipynb)
 3. Read `rq1_outputs/rq1_kendall_results.csv` for complete-case counts, missingness, estimates, raw and adjusted p-values, and bootstrap diagnostics. Set `RQ1_OUT_DIR` before running to write the rerun to a separate directory. [Results CSV](../rq1_outputs/rq1_kendall_results.csv)
 
-To score new clips, run `vbench_score_clips.ipynb` and extract its `rq1_vbench_csvs.zip` into `data/`. The notebook pins the benchmark checkout to `fd18b3d055cb0fc6f066ca90fe2c3c8cbb698490`. [Scoring notebook](../notebooks/vbench_score_clips.ipynb)
+To score new clips, run `vbench_score_clips.ipynb` and extract its `rq1_vbench_csvs.zip` into a separate working folder. The notebook pins the benchmark checkout to `fd18b3d055cb0fc6f066ca90fe2c3c8cbb698490`. [Scoring notebook](../notebooks/vbench_score_clips.ipynb)

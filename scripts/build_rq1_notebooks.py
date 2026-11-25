@@ -57,36 +57,28 @@ def build_scoring_notebook() -> None:
     cells.append(md("""
 # VBench custom-input scoring for RQ1 clips
 
-Run this on **Colab, A100 GPU, standard memory**. That runtime is about 40 GB of GPU memory and 84 GB of system RAM.
+## Colab runtime
 
-One raw clip is expanded to about 23 GB of frames in system RAM before VBench resizes it. That picks the machine:
+Use an A100 GPU for scoring. The runtime check requires CUDA, at least 35 GiB of GPU memory and 60 GiB of system RAM, and a compatible GPU architecture. The recorded study run used an NVIDIA A100-SXM4 80 GB GPU and reported 79.3 GiB of GPU memory and 167.1 GiB of system RAM.
 
-- **A100, standard memory.** Enough RAM for the frames. Leave High-RAM off; that only spends more compute units.
-- **L4** has about 53 GB of RAM, which is short of the frame buffer.
-- **G4** is an RTX PRO 6000 Blackwell. Same generation as the RTX 5060 this already failed on. VBench's CUDA stack is not built for it.
-- **H100** runs, and costs several times the A100 for six short clips.
-- **Kaggle T4 x2** does not pool into one 32 GB GPU for these metrics, and a TPU cannot run this PyTorch code.
+1. Upload this notebook to Colab.
+2. Select an A100 GPU. Use the 80 GB profile to match the recorded run.
+3. Run all cells. The notebook installs dependencies, uses the pinned VBench checkout, and downloads model weights.
+4. Download `rq1_vbench_csvs.zip` and extract it into a working folder.
 
-## Colab, nothing else to install
+## Metrics and study inputs
 
-1. Go to [colab.research.google.com](https://colab.research.google.com) → File → Upload notebook → this file.
-2. Runtime → Change runtime type → **A100 GPU**. Leave High-RAM unchecked.
-3. Runtime → Run all.
-4. When the last cell finishes, it downloads `rq1_vbench_csvs.zip`. Put those CSVs in the repo's `data/` folder. Add `human_ratings.csv` from Google Docs later, then run `rq1-aidrama.ipynb`.
+The selected set contains six VBench 1.0 dimensions (subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality) and VBench-2.0 human anatomy. The notebook reuses complete score columns. The recorded run reused the six VBench 1.0 columns and scored human anatomy.
 
-This notebook scores the six VBench 1.0 dimensions that apply to these clips: subject consistency, background consistency, motion smoothness, dynamic degree, aesthetic quality, and imaging quality. It also scores VBench 2.0 `Human_Anatomy` into `vbench2_human_anatomy`. A column that already has a score for every clip is left unchanged. Push `data/metric_scores.csv` before a second Colab run so those columns are not scored again.
+Human identity and clothing require single-person clips. Diversity requires multiple clips for one prompt, and multi-view consistency requires multiple views. The applicability table records which dimensions were scored and why others were skipped. Missing scores stay blank.
 
-`Human_Identity` and `Human_Clothes` are not scored. Both require one person, and these drama clips show several. Diversity and Multi-View Consistency need more than one clip per prompt. Those four are listed in `dimension_applicability.csv` and are absent from `metric_scores.csv`. `Human_Anatomy` looks at each person, so these multi-person clips are in scope. The confirmatory association notebook uses the dimensions this table marks scored, including `vbench2_human_anatomy`.
+The class analysis uses the checked-in metric scores and `data/human_ratings.csv`. Its Holm correction includes all seven scored dimensions. Dynamic degree was constant, leaving six testable associations.
 
-The notebook clones the public clip repo and the pinned VBench checkout, installs the Python packages, and downloads weights. Do not run VBench `setup.py`.
+## Outputs
 
-Missing scores stay missing. They are never written as zero. This notebook does not invent human enjoyment ratings.
-
-Outputs:
-
-- `clip_manifest.csv` — `video_id`, `path`, `source_id`, `duration`, `source_id_basis`
-- `metric_scores.csv` — one row per clip, the six VBench 1.0 columns plus `vbench2_human_anatomy`
-- `dimension_applicability.csv` — what ran, and why a dimension was skipped
+- `clip_manifest.csv` lists clip IDs, paths, and durations.
+- `metric_scores.csv` contains one row of scores per clip.
+- `dimension_applicability.csv` records dimension status and reasons.
 """))
 
     cells.append(code("""
@@ -809,7 +801,7 @@ print("Helpers ready.")
     cells.append(md("""
 ## 1. Build clip manifest
 
-Pilot `source_id` is the shared provisional value `unlabeled_pilot`. Replace with real drama IDs before confirmatory independent-clip inference.
+Register each clip by `video_id` and record its path and duration for the scoring export.
 """))
 
     cells.append(code("""
@@ -837,7 +829,6 @@ for path in videos:
         used_ids.add(video_id)
     else:
         video_id = make_video_id(path.stem, used_ids)
-    # Prefer an already-edited source_id; otherwise keep the provisional shared id.
     if prior.get("source_id") and prior.get("source_id_basis") != SOURCE_ID_BASIS:
         source_id = str(prior["source_id"])
         basis = str(prior.get("source_id_basis") or "edited_manifest")
@@ -874,7 +865,7 @@ display(manifest)
     cells.append(md("""
 ## 2. Official custom-input scoring
 
-Each VBench 1.0 dimension, and `Human_Anatomy`, is submitted alone with `mode='custom_input'`. Identity, clothes, Diversity, and Multi-View Consistency are not submitted. Set `RQ1_RUN_SCORING=0` to rebuild the metric table skeleton / reuse an existing file without calling VBench again.
+Evaluate each selected dimension separately in `custom_input` mode. Set `RQ1_RUN_SCORING=0` to reuse saved scores or write an empty score table without invoking VBench.
 """))
 
     cells.append(code("""
@@ -1064,9 +1055,9 @@ if blocker:
     cells.append(md("""
 ## 3. Download the CSVs
 
-The zip contains `clip_manifest.csv`, `metric_scores.csv`, and `dimension_applicability.csv`. On Colab the last lines start a browser download. Unzip into the repo's `data/` folder.
+Colab downloads `rq1_vbench_csvs.zip` with the clip manifest, metric scores, and applicability table. Extract the archive into a working folder.
 
-Human enjoyment is not in this zip. When the Google Docs ratings exist, add `data/human_ratings.csv` with columns `video_id`, `rater_id`, `enjoyment` (integers 1–5), replace `unlabeled_pilot` with real drama IDs, then run `notebooks/rq1-aidrama.ipynb`.
+To reproduce the class analysis, run `notebooks/rq1-aidrama.ipynb` with the checked-in CSVs in `data/`, including the survey ratings.
 """))
 
     cells.append(code("""
@@ -1098,21 +1089,25 @@ def build_association_notebook() -> None:
     cells.append(md("""
 # RQ1 association
 
-Kendall's tau-b between the scored VBench columns and clip-level mean human enjoyment.
+## Inputs and study sample
 
-The confirmatory question is pairwise: when one clip has a higher dimension score than another, does it also tend to have higher enjoyment? Tau-b summarizes concordant pairs minus discordant pairs and adjusts for ties. The coefficient is `(P - Q) / sqrt((P + Q + T)(P + Q + U))`, from `scipy.stats.kendalltau(..., variant="b")`. P and Q are concordant and discordant clip pairs. T counts pairs tied only on the dimension score. U counts pairs tied only on mean enjoyment. Pairs tied on both are in neither count. With no ties this equals tau-a. Positive tau-b means higher scores tend to accompany higher enjoyment. The pairs are not extra independent clips. N is the number of clips.
+The notebook joins `data/metric_scores.csv` to clip-level summaries from `data/human_ratings.csv` by `video_id`. It averages valid 1–5 enjoyment ratings and keeps clips with at least three ratings. The class study has 290 ratings from 29 viewers across clips 01–10, including 30 partial watches. Clip 11 has scores and no survey ratings.
 
-Spearman is not estimated. Tau-b and Spearman are different scales and are not compared. A constant column makes tau-b undefined. That dimension stays in the Holm family as an internal p of 1, and its coefficient and p-values are reported as unavailable rather than as zero.
+The Holm family follows the rows marked `scored` in `data/dimension_applicability.csv`, in table order. It includes six VBench 1.0 dimensions and VBench-2.0 human anatomy. Dynamic degree is constant, so six of the seven dimensions are testable.
 
-Reads `data/metric_scores.csv`, keeping `source_id` as text so values such as `001` and `1` stay distinct. When any `source_id` is blank, fills only those blanks from `data/clip_manifest.csv` after rejecting null, duplicate, or conflicting manifest IDs. Reads `data/human_ratings.csv` when that file exists (`video_id`, `rater_id`, `enjoyment` as integers 1–5).
+## Kendall’s tau-b and inference
 
-The confirmatory family is every row in `data/dimension_applicability.csv` whose status is `scored`. The notebook reads those rows' `column_name` values in table order. On this pilot those columns are the six VBench 1.0 columns plus `vbench2_human_anatomy`. Identity, clothes, Diversity, and Multi-View Consistency stay out because that table marks them not applicable. `vbench_dynamic_degree` stays in the family when its row is `scored`; on this pilot it is constant, so tau-b is undefined and it enters Holm as an internal p of 1.
+For each dimension, calculate Kendall’s tau-b between score and mean enjoyment on the complete clip rows. The notebook uses `scipy.stats.kendalltau(..., variant="b")` and requires at least four complete clips and variation in both inputs. It retains the original scores and treats blank scores as missing. The count of concordant pairs is P, the count of discordant pairs is Q, and T and U count pairs tied on only one variable. The coefficient is `(P - Q) / sqrt((P + Q + T)(P + Q + U))`.
 
-This notebook does not score clips and does not invent ratings. If enjoyment ratings are missing, or confirmatory inference is blocked, it stops, writes no association claims, and removes a prior `rq1_kendall_results.csv` and any leftover `rq1_spearman_results.csv`. Non-numeric and infinite scores are rejected. Blank scores stay missing and are never filled with zero. Scores are not rounded or jittered before ties are judged. Clips with fewer than 3 ratings are excluded. Kendall's tau-b needs at least 4 eligible clips. Repeated `source_id` values, including provisional `unlabeled_pilot`, skip confirmatory inference until real drama IDs exist. `unlabeled_pilot` is not treated as a verified shared drama or as evidence that the clips are independent.
+The 95% percentile intervals resample paired clips with replacement and use the defined estimates. The default is 2,000 replicates, and an interval requires at least 100 defined estimates. The two-sided permutation test keeps each metric fixed and shuffles mean enjoyment. For at most seven complete clips, it enumerates the permutations. For larger samples, it uses 4,999 Monte Carlo permutations by default.
 
-Bootstrap 95% percentile intervals resample paired clips with replacement. A replicate that makes either column constant is undefined: it is counted, omitted from the percentiles, and the notebook warns. The interval is reported only when at least 100 replicates are defined; otherwise the limits stay unavailable and the notebook warns. Intervals condition on the observed viewer panel and are not simultaneous family-wide intervals. The permutation test holds metric scores fixed and permutes mean enjoyment. Absolute tau-b is the two-sided statistic. Complete cases of size 7 or fewer (`7! = 5040`) use every enjoyment permutation. Larger samples use Monte Carlo. The Monte Carlo p-value is `(1 + count of |tau| at least the observed |tau|) / (1 + permutations)` and is never zero. Median enjoyment repeats tau-b as a sensitivity check, not as a second confirmatory test.
+Holm correction uses a 0.05 significance level across the seven scored dimensions. An untestable dimension enters the correction with an internal p-value of 1, and its estimate and p-values are reported as unavailable. The sensitivity check repeats tau-b with median enjoyment for each tested metric.
 
-Defaults are seed 42, 2000 bootstrap replicates, and 4999 Monte Carlo permutations. Override them with `RQ1_SEED`, `RQ1_N_BOOTSTRAP`, and `RQ1_N_PERMUTATIONS`.
+## Output
+
+The notebook writes `rq1_outputs/rq1_kendall_results.csv`. Set `RQ1_OUT_DIR` to save a rerun in a separate directory. The notebook clears prior results in the selected output directory at startup.
+
+The default base seed is 42. Override it and the replicate counts with `RQ1_SEED`, `RQ1_N_BOOTSTRAP`, and `RQ1_N_PERMUTATIONS`.
 """))
     cells.append(code("""
 from pathlib import Path
