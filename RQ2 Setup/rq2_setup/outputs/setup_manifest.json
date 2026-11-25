@@ -1,0 +1,65 @@
+{
+  "human_sheet_url": "https://docs.google.com/spreadsheets/d/1zBIUWbZG05FXAisbiaDKXVXAHg6IPw5XPwKZjYsWk_c/edit",
+  "human_worksheet": "Sheet1",
+  "human_worksheet_gid": 599409287,
+  "human_snapshot_sha256": "45817b729427561e0cd70ecd9e479786841e17cd8525fd05017da1f5f02292bf",
+  "reverse_source_sheet_rows": [
+    28,
+    29,
+    30
+  ],
+  "judge_md": "/content/drive/MyDrive/RQ2 Setup/judge.md",
+  "judge_md_sha256": "a59abf525f53910aa3f6ed66adcd415c516c2ecf0353b0aeb8075345d6e966d5",
+  "vlm_results": "/content/drive/MyDrive/RQ2 Setup/vlm_watched_results.md",
+  "vlm_results_sha256": "fa50d00802f0a15aa13b1bd02073adfc42fb707d442d1926c9a0815d9f223e81",
+  "excluded_participants": [],
+  "require_full_watch": false,
+  "n_human_clip_rows": 290,
+  "n_vlm_clips": 10,
+  "n_question_comparisons": 580,
+  "n_prepared_tasks": 555,
+  "n_returned_judgments": 3,
+  "api_called": true,
+  "openrouter_model": "baidu/ernie-5.5-flash-preview:free",
+  "generation_settings": {
+    "temperature": 0.0,
+    "max_tokens": 4096
+  },
+  "api_run_status": {
+    "http_attempts": 5,
+    "saved_this_run": 3,
+    "state": "attempt_budget_reached"
+  },
+  "source_mapping": {
+    "A": "human",
+    "B": "VLM"
+  },
+  "question_types": [
+    "liked",
+    "disliked"
+  ],
+  "enjoyment_scale": [
+    1,
+    5
+  ],
+  "alignment_scale": [
+    0,
+    4
+  ],
+  "unscorable_alignment": null,
+  "status_counts": {
+    "pending_judge": 552,
+    "review_context": 25,
+    "scorable": 3
+  },
+  "context_chain_version": "same-question-back-reference-v1",
+  "default_viewing_order": "forward",
+  "viewing_order_overrides": {},
+  "reference_overrides": [],
+  "reference_status_counts": {
+    "not_needed": 554,
+    "unresolved_no_previous_anchor": 18,
+    "review_ambiguous_reference": 7,
+    "context_supplied": 1
+  }
+}

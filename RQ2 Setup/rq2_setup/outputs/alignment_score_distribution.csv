@@ -1,0 +1,4 @@
+clip_id,question_type,alignment_score,count
+clip_01,disliked,0.0,1
+clip_01,liked,0.0,1
+clip_02,liked,0.0,1

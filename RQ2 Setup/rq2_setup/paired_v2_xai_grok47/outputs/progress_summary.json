@@ -1,0 +1,12 @@
+{
+  "schema_version": "liked-disliked-paired-v2",
+  "respondent_clip_rows": 290,
+  "prepared_api_requests": 290,
+  "completed_api_requests": 290,
+  "pending_api_requests": 0,
+  "scored_question_results": 451,
+  "unscorable_question_results": 129,
+  "context_review_question_sides": 0,
+  "awaiting_vlm_question_sides": 0,
+  "stale_results_ignored": 7
+}

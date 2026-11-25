@@ -1,0 +1,15 @@
+﻿metric,value
+sample_n,40
+human_accepted_scorable,36
+human_rejected_unscorable,4
+human_acceptance_proportion,0.9
+comparable_score_pairs,36
+quadratic_weighted_cohens_kappa,0.36690647482014394
+kappa_note,
+mae_0_to_4,0.6666666666666666
+exact_score_agreement,0.5555555555555556
+within_one_point_agreement,0.8333333333333334
+score_disagreement_cases,16
+scorability_kappa,
+scorability_note,Not calculated: all 40 sampled cases were originally Grok-scorable.
+sampling_note,"Score-stratified sample: 20 Grok zeros, 10 ones, 10 twos; sample agreement is not population agreement."

@@ -1,0 +1,4 @@
+clip_id,question_type,n_scored,median_alignment,mean_alignment
+clip_01,disliked,1,0.0,0.0
+clip_01,liked,1,0.0,0.0
+clip_02,liked,1,0.0,0.0

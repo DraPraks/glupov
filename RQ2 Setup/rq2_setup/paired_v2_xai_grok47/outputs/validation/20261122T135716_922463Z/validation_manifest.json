@@ -1,0 +1,17 @@
+{
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/13puWOx0vW5DLinKtY9qNlkic75PFxISPzOlsNr0XgDg/edit",
+  "human_tab": "Validation 40",
+  "original_key_tab": "Validation answer key",
+  "timestamp_utc": "20261122T135716_922463Z",
+  "source_snapshot_sha256": "e335a0e1dece707557b4e2bbb09ce01fedcb824ce9407d41e8dacfe03099f244",
+  "human_scores_modified": false,
+  "new_llm_calls": 0,
+  "kappa_weights": "quadratic",
+  "labels": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ]
+}

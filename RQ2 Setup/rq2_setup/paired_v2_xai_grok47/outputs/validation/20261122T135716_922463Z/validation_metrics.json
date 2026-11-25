@@ -1,0 +1,16 @@
+{
+  "sample_n": 40,
+  "human_accepted_scorable": 35,
+  "human_rejected_unscorable": 5,
+  "human_acceptance_proportion": 0.875,
+  "comparable_score_pairs": 35,
+  "quadratic_weighted_cohens_kappa": 0.2863211554800341,
+  "kappa_note": null,
+  "mae_0_to_4": 0.7428571428571429,
+  "exact_score_agreement": 0.5142857142857142,
+  "within_one_point_agreement": 0.8,
+  "score_disagreement_cases": 17,
+  "scorability_kappa": null,
+  "scorability_note": "Not calculated: all 40 sampled cases were originally Grok-scorable.",
+  "sampling_note": "Score-stratified sample: 20 Grok zeros, 10 ones, 10 twos; sample agreement is not population agreement."
+}

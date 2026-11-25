@@ -1,0 +1,172 @@
+[
+  {
+    "comparison_id": "H001__clip_01__liked",
+    "task_id": "cd1f05ee664d87f8c8d9f36aed1431e4",
+    "input_hash": "169852365e93b060cf4ecd16752300374754b6a66e7c7f4b59559a8800de27c7",
+    "output": {
+      "scorable": true,
+      "unscorable_reason": null,
+      "a_reasons": [
+        {
+          "id": "A1",
+          "aspect": "the characters (characterization)",
+          "evaluation": "the characters are unique and detailed",
+          "polarity": "positive",
+          "evidence": "karakternya unik detail"
+        }
+      ],
+      "b_reasons": [
+        {
+          "id": "B1",
+          "aspect": "the comedic misunderstanding (the master mishearing the girl's expletive as his own name and concluding his fame hasn't faded)",
+          "evaluation": "brilliantly executed",
+          "polarity": "positive",
+          "evidence": "The comedic misunderstanding is brilliantly executed"
+        },
+        {
+          "id": "B2",
+          "aspect": "the scene's subversion of expectations and its resulting humor",
+          "evaluation": "cleverly subverts expectations and delivers genuine humor",
+          "polarity": "positive",
+          "evidence": "This subverts expectations cleverly and gives the scene genuine humor."
+        }
+      ],
+      "matched_reasons": [],
+      "related_but_distinct": [],
+      "conflicting_reasons": [],
+      "a_unmatched_reasons": [
+        "A1"
+      ],
+      "b_unmatched_reasons": [
+        "B1",
+        "B2"
+      ],
+      "counts": {
+        "n_a": 1,
+        "n_b": 2,
+        "n_matched_pairs": 0
+      },
+      "a_match_coverage": 0.0,
+      "b_match_coverage": 0.0,
+      "alignment_score": 0,
+      "brief_justification": "A praises the characters as unique and detailed, while B praises the execution of a specific comedic misunderstanding and its clever subversion of expectations. These evaluate different features, so there are no matched pairs and no conflicts. With zero matches, coverage is 0.0 for both responses, giving a score of 0."
+    }
+  },
+  {
+    "comparison_id": "H001__clip_01__disliked",
+    "task_id": "912940c05c47b71addc01a380cd675af",
+    "input_hash": "9fdc721a394eed4377a6d8bd29e785709eb35c64af0f3da6fe08c23f7a399ab2",
+    "output": {
+      "scorable": true,
+      "unscorable_reason": null,
+      "a_reasons": [
+        {
+          "id": "A1",
+          "aspect": "movement / motion (gerakan)",
+          "evaluation": "The movements are still stiff/choppy and not smooth",
+          "polarity": "negative",
+          "evidence": "gerakan masih patah"
+        }
+      ],
+      "b_reasons": [
+        {
+          "id": "B1",
+          "aspect": "sudden profanity vs. tonal/aesthetic consistency",
+          "evaluation": "The sudden profanity is tonally jarring against the grand, traditional xianxia aesthetic, creating a mild whiplash effect",
+          "polarity": "negative",
+          "evidence": "The sudden profanity feels slightly tonally jarring against the otherwise grand, traditional xianxia aesthetic of the setting and costumes, creating a mild whiplash effect"
+        },
+        {
+          "id": "B2",
+          "aspect": "sudden profanity vs. comedic payoff",
+          "evaluation": "The profanity does serve the punchline",
+          "polarity": "positive",
+          "evidence": "though it does serve the punchline"
+        }
+      ],
+      "matched_reasons": [],
+      "related_but_distinct": [],
+      "conflicting_reasons": [],
+      "a_unmatched_reasons": [
+        "A1"
+      ],
+      "b_unmatched_reasons": [
+        "B1",
+        "B2"
+      ],
+      "counts": {
+        "n_a": 1,
+        "n_b": 2,
+        "n_matched_pairs": 0
+      },
+      "a_match_coverage": 0.0,
+      "b_match_coverage": 0.0,
+      "alignment_score": 0,
+      "brief_justification": "Response A criticizes stiff/choppy movement (gerakan masih patah), while Response B evaluates the tonal effect of sudden profanity against the xianxia aesthetic (negative) and its function for the punchline (positive). These concern entirely different features with no shared aspect, so there are no matched pairs. With n_matched_pairs = 0, the rubric yields a score of 0."
+    }
+  },
+  {
+    "comparison_id": "H001__clip_02__liked",
+    "task_id": "698bb37cf32b6db0ef93e4aa96012c5d",
+    "input_hash": "b730704c15981d40229eaa669788890e856b6f0134adf5d2bb3f465ed936fe53",
+    "output": {
+      "scorable": true,
+      "unscorable_reason": null,
+      "a_reasons": [
+        {
+          "id": "A1",
+          "aspect": "Visuals / graphic quality",
+          "evaluation": "The graphics are good.",
+          "polarity": "positive",
+          "evidence": "grafik bagus"
+        },
+        {
+          "id": "A2",
+          "aspect": "Character depiction / character design",
+          "evaluation": "The characters look like real humans (human-like rendering).",
+          "polarity": "positive",
+          "evidence": "seperti karakter manusia"
+        }
+      ],
+      "b_reasons": [
+        {
+          "id": "B1",
+          "aspect": "Tension / pacing and resulting scene mood",
+          "evaluation": "Tension builds quickly via the sudden grab, the glowing watch detail, and the woman's distressed struggle, making the scene suspenseful and intriguing.",
+          "polarity": "positive",
+          "evidence": "The clip builds tension quickly"
+        }
+      ],
+      "matched_reasons": [],
+      "related_but_distinct": [
+        {
+          "a_id": "A1",
+          "b_id": "B1",
+          "explanation": "Both touch on the visual layer, but A1 evaluates graphic quality itself as good, while B1 mentions a visual element (the glowing watch detail) only as a device that builds tension. B1 never evaluates visual or graphic quality, so the specific evaluations differ."
+        },
+        {
+          "a_id": "A2",
+          "b_id": "B1",
+          "explanation": "Both concern characters, but A2 evaluates how the characters look (human-like appearance), whereas B1 evaluates the woman's distressed struggle as a source of tension. Appearance/realism and narrative function are different evaluations."
+        }
+      ],
+      "conflicting_reasons": [],
+      "a_unmatched_reasons": [
+        "A1",
+        "A2"
+      ],
+      "b_unmatched_reasons": [
+        "B1"
+      ],
+      "counts": {
+        "n_a": 2,
+        "n_b": 1,
+        "n_matched_pairs": 0
+      },
+      "a_match_coverage": 0.0,
+      "b_match_coverage": 0.0,
+      "alignment_score": 0,
+      "brief_justification": "A praises graphic quality and human-like characters; B praises fast-building tension and a suspenseful, intriguing mood. The two sets overlap only in broad topic (visuals, characters), which is related-but-distinct rather than a match, and there are no conflicts. With zero matched pairs, coverage is 0.0 for both responses, giving score 0."
+    }
+  }
+]

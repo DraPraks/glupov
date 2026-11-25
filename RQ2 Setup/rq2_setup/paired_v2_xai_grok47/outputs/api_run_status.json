@@ -1,0 +1,10 @@
+{
+  "schema_version": "liked-disliked-paired-v2",
+  "http_attempts": 0,
+  "saved_this_run": 0,
+  "total_requests": 290,
+  "completed_before_run": 290,
+  "completed_requests": 290,
+  "remaining_requests": 0,
+  "state": "no_pending_tasks"
+}

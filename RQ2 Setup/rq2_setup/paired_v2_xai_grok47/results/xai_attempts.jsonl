@@ -1,0 +1,3 @@
+{"task_id": "97f2c99931e4115068ee605b9a86a6e7", "timestamp": "2026-11-21T15:49:05.107467+00:00", "status": "request_error", "http_status": 429, "error_type": "HTTPError"}
+{"task_id": "97f2c99931e4115068ee605b9a86a6e7", "timestamp": "2026-11-21T15:49:09.868679+00:00", "status": "request_error", "http_status": 429, "error_type": "HTTPError"}
+{"task_id": "97f2c99931e4115068ee605b9a86a6e7", "timestamp": "2026-11-21T15:49:18.390092+00:00", "status": "request_error", "http_status": 429, "error_type": "HTTPError"}

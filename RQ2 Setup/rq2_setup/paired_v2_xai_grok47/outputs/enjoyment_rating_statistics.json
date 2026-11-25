@@ -1,0 +1,6 @@
+{
+  "n_clip_pairs": 10,
+  "mae": 0.393103448275862,
+  "spearman_rho": 0.690197037967791,
+  "permutation_pvalue": null
+}

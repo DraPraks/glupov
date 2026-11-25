@@ -1,0 +1,587 @@
+﻿participant_id,clip_id,question_type,order_source,classification_source,original_answer,reference_kind,reference_status,reference_chain,context_answer,context_clip_id,viewing_position,context_ready
+H001,clip_01,liked,csv_presentation_order,automatic,karakternya unik detail,standalone,not_needed,[],,,1,True
+H001,clip_01,disliked,csv_presentation_order,automatic,"gerakan masih patah""",standalone,not_needed,[],,,1,True
+H001,clip_02,liked,csv_presentation_order,automatic,"grafik bagus, seperti karakter manusia",standalone,not_needed,[],,,2,True
+H001,clip_02,disliked,csv_presentation_order,automatic,belum tau,standalone,not_needed,[],,,2,True
+H001,clip_03,liked,csv_presentation_order,automatic,"grafik, seperti manusia",standalone,not_needed,[],,,3,True
+H001,clip_03,disliked,csv_presentation_order,automatic,tidak ada sub,standalone,not_needed,[],,,3,True
+H001,clip_04,liked,csv_presentation_order,automatic,"grafik, karakter detail manusia",standalone,not_needed,[],,,4,True
+H001,clip_04,disliked,csv_presentation_order,automatic,alurnya aneh,standalone,not_needed,[],,,4,True
+H001,clip_05,liked,csv_presentation_order,automatic,detail side kamera (ga cuma 1),standalone,not_needed,[],,,5,True
+H001,clip_05,disliked,csv_presentation_order,automatic,belum tau,standalone,not_needed,[],,,5,True
+H001,clip_06,liked,csv_presentation_order,automatic,grafik,standalone,not_needed,[],,,6,True
+H001,clip_06,disliked,csv_presentation_order,automatic,jalan cerita langsung berubah cepat,standalone,not_needed,[],,,6,True
+H001,clip_07,liked,csv_presentation_order,automatic,grafis dan face look good,standalone,not_needed,[],,,7,True
+H001,clip_07,disliked,csv_presentation_order,automatic,cepet berubah jalan cerita,standalone,not_needed,[],,,7,True
+H001,clip_08,liked,csv_presentation_order,automatic,magic nya halus,standalone,not_needed,[],,,8,True
+H001,clip_08,disliked,csv_presentation_order,automatic,expresi over,standalone,not_needed,[],,,8,True
+H001,clip_09,liked,csv_presentation_order,automatic,grafik,standalone,not_needed,[],,,9,True
+H001,clip_09,disliked,csv_presentation_order,automatic,jalan cerita belum masuk akal,standalone,not_needed,[],,,9,True
+H001,clip_10,liked,csv_presentation_order,automatic,karakter good looking,standalone,not_needed,[],,,10,True
+H001,clip_10,disliked,csv_presentation_order,automatic,magicnya ga halus,standalone,not_needed,[],,,10,True
+H002,clip_01,liked,csv_presentation_order,automatic,"i like the ""what the fuck"" part. ",standalone,not_needed,[],,,1,True
+H002,clip_01,disliked,csv_presentation_order,automatic,the voice over was a bit overboard but still funny in a sense.,standalone,not_needed,[],,,1,True
+H002,clip_02,liked,csv_presentation_order,automatic,Realistic acting but not really much shown in the video but still good.,standalone,not_needed,[],,,2,True
+H002,clip_02,disliked,csv_presentation_order,automatic,Nothing much.,standalone,not_needed,[],,,2,True
+H002,clip_03,liked,csv_presentation_order,automatic,Typical romance drama. ,standalone,not_needed,[],,,3,True
+H002,clip_03,disliked,csv_presentation_order,automatic,nothing much.,standalone,not_needed,[],,,3,True
+H002,clip_04,liked,csv_presentation_order,automatic,nothing to like honestly in the video.,standalone,not_needed,[],,,4,True
+H002,clip_04,disliked,csv_presentation_order,automatic,there's nothing much also to dislike in the video just a typical vid.,standalone,not_needed,[],,,4,True
+H002,clip_05,liked,csv_presentation_order,automatic,maybe a bit of suspense genre? ,standalone,not_needed,[],,,5,True
+H002,clip_05,disliked,csv_presentation_order,automatic,the translation or voice over was a bit out of sync.,standalone,not_needed,[],,,5,True
+H002,clip_06,liked,csv_presentation_order,automatic,"suspense, betrayal, and good looking fmc.",standalone,not_needed,[],,,6,True
+H002,clip_06,disliked,csv_presentation_order,automatic,voice over/translation was out of sync but understandable.,standalone,not_needed,[],,,6,True
+H002,clip_07,liked,csv_presentation_order,automatic,Nothing really.,standalone,not_needed,[],,,7,True
+H002,clip_07,disliked,csv_presentation_order,automatic,the ai is clearly noticeable in the girls face. ,standalone,not_needed,[],,,7,True
+H002,clip_08,liked,csv_presentation_order,automatic,A bit of mystery and suspense on the genre.,standalone,not_needed,[],,,8,True
+H002,clip_08,disliked,csv_presentation_order,automatic,ai was a bit excessive as well.,standalone,not_needed,[],,,8,True
+H002,clip_09,liked,csv_presentation_order,automatic,The witcher bootleg xd.,standalone,not_needed,[],,,9,True
+H002,clip_09,disliked,csv_presentation_order,automatic,also by being the witcher bootleg xd.,standalone,not_needed,[],,,9,True
+H002,clip_10,liked,csv_presentation_order,automatic,a bit of fantasy genre.,standalone,not_needed,[],,,10,True
+H002,clip_10,disliked,csv_presentation_order,automatic,nothing much just that ai was overly noticeable as well. ,standalone,not_needed,[],,,10,True
+H003,clip_01,liked,csv_presentation_order,automatic,The story telling is okay,standalone,not_needed,[],,,1,True
+H003,clip_01,disliked,csv_presentation_order,automatic,Looks AI at first glance,standalone,not_needed,[],,,1,True
+H003,clip_02,liked,csv_presentation_order,automatic,A bit of suspense,standalone,not_needed,[],,,2,True
+H003,clip_02,disliked,csv_presentation_order,automatic,Looks very AI,standalone,not_needed,[],,,2,True
+H003,clip_03,liked,csv_presentation_order,automatic,I don't like shows like thid,standalone,not_needed,[],,,3,True
+H003,clip_03,disliked,csv_presentation_order,automatic,Mehhhh not good,standalone,not_needed,[],,,3,True
+H003,clip_04,liked,csv_presentation_order,automatic,Funny mem references,standalone,not_needed,[],,,4,True
+H003,clip_04,disliked,csv_presentation_order,automatic,N/A,missing,not_needed,[],,,4,True
+H003,clip_05,liked,csv_presentation_order,automatic,Somewhat okay,standalone,not_needed,[],,,5,True
+H003,clip_05,disliked,csv_presentation_order,automatic,Very AI,standalone,not_needed,[],,,5,True
+H003,clip_06,liked,csv_presentation_order,automatic,Video doesn't load,standalone,not_needed,[],,,6,True
+H003,clip_06,disliked,csv_presentation_order,automatic,N/A,missing,not_needed,[],,,6,True
+H003,clip_07,liked,csv_presentation_order,automatic,Mafia Boss kekw,standalone,not_needed,[],,,7,True
+H003,clip_07,disliked,csv_presentation_order,automatic,Easy to predict what will happen,standalone,not_needed,[],,,7,True
+H003,clip_08,liked,csv_presentation_order,automatic,Story a bit nice,standalone,not_needed,[],,,8,True
+H003,clip_08,disliked,csv_presentation_order,automatic,Very AI,standalone,not_needed,[],,,8,True
+H003,clip_09,liked,csv_presentation_order,automatic,Bootleg Witcher Nice,standalone,not_needed,[],,,9,True
+H003,clip_09,disliked,csv_presentation_order,automatic,Very AI,standalone,not_needed,[],,,9,True
+H003,clip_10,liked,csv_presentation_order,automatic,Kewl Magic stuff haha,standalone,not_needed,[],,,10,True
+H003,clip_10,disliked,csv_presentation_order,automatic,Very AI,standalone,not_needed,[],,,10,True
+H004,clip_01,liked,csv_presentation_order,automatic,No like no dislike,standalone,not_needed,[],,,1,True
+H004,clip_01,disliked,csv_presentation_order,automatic,No like no dislike,standalone,not_needed,[],,,1,True
+H004,clip_02,liked,csv_presentation_order,automatic,Ntg,standalone,not_needed,[],,,2,True
+H004,clip_02,disliked,csv_presentation_order,automatic,Ntg,standalone,not_needed,[],,,2,True
+H004,clip_03,liked,csv_presentation_order,automatic,Ntg,standalone,not_needed,[],,,3,True
+H004,clip_03,disliked,csv_presentation_order,automatic,I rarely watch western,standalone,not_needed,[],,,3,True
+H004,clip_04,liked,csv_presentation_order,automatic,Ntg,standalone,not_needed,[],,,4,True
+H004,clip_04,disliked,csv_presentation_order,automatic,Not interested ,standalone,not_needed,[],,,4,True
+H004,clip_05,liked,csv_presentation_order,automatic,Ntg,standalone,not_needed,[],,,5,True
+H004,clip_05,disliked,csv_presentation_order,automatic,Ntg,standalone,not_needed,[],,,5,True
+H004,clip_06,liked,csv_presentation_order,automatic,No,standalone,not_needed,[],,,6,True
+H004,clip_06,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,6,True
+H004,clip_07,liked,csv_presentation_order,automatic,-,missing,not_needed,[],,,7,True
+H004,clip_07,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,7,True
+H004,clip_08,liked,csv_presentation_order,automatic,Magic,standalone,not_needed,[],,,8,True
+H004,clip_08,disliked,csv_presentation_order,automatic,Not anime,standalone,not_needed,[],,,8,True
+H004,clip_09,liked,csv_presentation_order,automatic,Not my type,standalone,not_needed,[],,,9,True
+H004,clip_09,disliked,csv_presentation_order,automatic,Not my preference,standalone,not_needed,[],,,9,True
+H004,clip_10,liked,csv_presentation_order,automatic,Reborn,standalone,not_needed,[],,,10,True
+H004,clip_10,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,10,True
+H005,clip_01,liked,csv_presentation_order,automatic,The animation looks engaging,standalone,not_needed,[],,,1,True
+H005,clip_01,disliked,csv_presentation_order,automatic,I don't like the English dubbing :/,standalone,not_needed,[],,,1,True
+H005,clip_02,liked,csv_presentation_order,automatic,FL looks pretty ,standalone,not_needed,[],,,2,True
+H005,clip_02,disliked,csv_presentation_order,automatic,Why she so weak one never fight back much,standalone,not_needed,[],,,2,True
+H005,clip_03,liked,csv_presentation_order,automatic,At least the female characters don't look too alike ,standalone,not_needed,[],,,3,True
+H005,clip_03,disliked,csv_presentation_order,automatic,The bgm was a bit loud Vs the dialogue,standalone,not_needed,[],,,3,True
+H005,clip_04,liked,csv_presentation_order,automatic,FL looks a bit like Rihanna imo,standalone,not_needed,[],,,4,True
+H005,clip_04,disliked,csv_presentation_order,automatic,I was mildly worried about copyright issues (Gucci),standalone,not_needed,[],,,4,True
+H005,clip_05,liked,csv_presentation_order,automatic,"Is this a BL genre? ""I'll take you abroad myself for a good life?""",standalone,not_needed,[],,,5,True
+H005,clip_05,disliked,csv_presentation_order,automatic,The dubbing and funny weird building name,standalone,not_needed,[],,,5,True
+H005,clip_06,liked,csv_presentation_order,automatic,The male character looks distinctive,standalone,not_needed,[],,,6,True
+H005,clip_06,disliked,csv_presentation_order,automatic,The dubbing and voice used,standalone,not_needed,[],,,6,True
+H005,clip_07,liked,csv_presentation_order,automatic,Is that Kristen Stewart ,standalone,not_needed,[],,,7,True
+H005,clip_07,disliked,csv_presentation_order,automatic,His shocked face about her saying she'll die ,standalone,not_needed,[],,,7,True
+H005,clip_08,liked,csv_presentation_order,automatic,Her dress looks like elsa's,standalone,not_needed,[],,,8,True
+H005,clip_08,disliked,csv_presentation_order,automatic,Guy's hair looks really fake,standalone,not_needed,[],,,8,True
+H005,clip_09,liked,csv_presentation_order,automatic,The warm tone used in the clip ,standalone,not_needed,[],,,9,True
+H005,clip_09,disliked,csv_presentation_order,automatic,Hmmm baby looks fake,standalone,not_needed,[],,,9,True
+H005,clip_10,liked,csv_presentation_order,automatic,Uhhh male lead looks different from usual AI short films',standalone,not_needed,[],,,10,True
+H005,clip_10,disliked,csv_presentation_order,automatic,This rebirth/revenge storyline is really overused,standalone,not_needed,[],,,10,True
+H006,clip_01,liked,csv_presentation_order,automatic,The hook. ,standalone,not_needed,[],,,1,True
+H006,clip_01,disliked,csv_presentation_order,automatic,Left hanging. Need continuation. ,standalone,not_needed,[],,,1,True
+H006,clip_02,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,2,True
+H006,clip_02,disliked,csv_presentation_order,automatic,No story behind it.,standalone,not_needed,[],,,2,True
+H006,clip_03,liked,csv_presentation_order,automatic,"There's a story and a cliffhanger making the viewers hook into what's the story behind or where they have met, also the characters look realistic.",standalone,not_needed,[],,,3,True
+H006,clip_03,disliked,csv_presentation_order,automatic,none.,no_reason,not_needed,[],,,3,True
+H006,clip_04,liked,csv_presentation_order,automatic,"Needs more context or atleast dialogue, and the story is pretty speed up.",standalone,not_needed,[],,,4,True
+H006,clip_04,disliked,csv_presentation_order,automatic,Not enough context/details.,standalone,not_needed,[],,,4,True
+H006,clip_05,liked,csv_presentation_order,automatic,None.,no_reason,not_needed,[],,,5,True
+H006,clip_05,disliked,csv_presentation_order,automatic,"Does not have a proper hook, characters needs a better lipsync. ",standalone,not_needed,[],,,5,True
+H006,clip_06,liked,csv_presentation_order,automatic,None.,no_reason,not_needed,[],,,6,True
+H006,clip_06,disliked,csv_presentation_order,automatic,Needs better lipsync and better voice actors/agents.,standalone,not_needed,[],,,6,True
+H006,clip_07,liked,csv_presentation_order,automatic,There's a context.,standalone,not_needed,[],,,7,True
+H006,clip_07,disliked,csv_presentation_order,automatic,None. ,no_reason,not_needed,[],,,7,True
+H006,clip_08,liked,csv_presentation_order,automatic,Good story.,standalone,not_needed,[],,,8,True
+H006,clip_08,disliked,csv_presentation_order,automatic,None.,no_reason,not_needed,[],,,8,True
+H006,clip_09,liked,csv_presentation_order,automatic,"The scene/background, the vfx and sfx got me hooked.",standalone,not_needed,[],,,9,True
+H006,clip_09,disliked,csv_presentation_order,automatic,None.,no_reason,not_needed,[],,,9,True
+H006,clip_10,liked,csv_presentation_order,automatic,"Hook, vfx and sfx. the voice agent used fits and syncs well with the characters.",standalone,not_needed,[],,,10,True
+H006,clip_10,disliked,csv_presentation_order,automatic,None.,no_reason,not_needed,[],,,10,True
+H007,clip_01,liked,csv_presentation_order,automatic,Suka detail rambutnya bertekstur dan terlihat lembut,standalone,not_needed,[],,,1,True
+H007,clip_01,disliked,csv_presentation_order,automatic,"Transisi dari beberapa scene seperti saat pemeran wanitanya terjatuh, tiba tiba mukanya datar dan wajah karakternya sedikit berubah. karna dubbing bahasa inggris jadi gerakan mulutnya tidak sesuai juga",standalone,not_needed,[],,,1,True
+H007,clip_02,liked,csv_presentation_order,automatic,terlihat lebih realistis,standalone,not_needed,[],,,2,True
+H007,clip_02,disliked,csv_presentation_order,automatic,tangannya tiba tiba memanjang,standalone,not_needed,[],,,2,True
+H007,clip_03,liked,csv_presentation_order,automatic,kaya manusia ga kaya ai,standalone,not_needed,[],,,3,True
+H007,clip_03,disliked,csv_presentation_order,automatic,dahi pemeran lelakinya terlalu berkerut,standalone,not_needed,[],,,3,True
+H007,clip_04,liked,csv_presentation_order,automatic,Wajah pemerannya terlihat real,standalone,not_needed,[],,,4,True
+H007,clip_04,disliked,csv_presentation_order,automatic,saat mengeluarkan baju dari paperbag kaya sulap,standalone,not_needed,[],,,4,True
+H007,clip_05,liked,csv_presentation_order,automatic,pencahayaannya bagus,standalone,not_needed,[],,,5,True
+H007,clip_05,disliked,csv_presentation_order,automatic,winenya terlalu bergoyang,standalone,not_needed,[],,,5,True
+H007,clip_06,liked,csv_presentation_order,automatic,Karakter perempuan berbaju putihnya seperti manusia,standalone,not_needed,[],,,6,True
+H007,clip_06,disliked,csv_presentation_order,automatic,transisi perubahan scenenya tidak smooth,standalone,not_needed,[],,,6,True
+H007,clip_07,liked,csv_presentation_order,automatic,bentuk mata karakter perempuannya bagus,standalone,not_needed,[],,,7,True
+H007,clip_07,disliked,csv_presentation_order,automatic,"rambut pemeran wanitanya tidak menyatu, dagu pria terlalu kecil dan runcing",standalone,not_needed,[],,,7,True
+H007,clip_08,liked,csv_presentation_order,automatic,I LIKE THE DETAILLL transisinya smooth banget dan cakeupp,standalone,not_needed,[],,,8,True
+H007,clip_08,disliked,csv_presentation_order,automatic,scene hamilnya terlalu blup tiba tiba,standalone,not_needed,[],,,8,True
+H007,clip_09,liked,csv_presentation_order,automatic,pencahayaannya bagus,standalone,not_needed,[],,,9,True
+H007,clip_09,disliked,csv_presentation_order,automatic,karakter tidak berkedip,standalone,not_needed,[],,,9,True
+H007,clip_10,liked,csv_presentation_order,automatic,karakter perempuannya kaya bukan AI,standalone,not_needed,[],,,10,True
+H007,clip_10,disliked,csv_presentation_order,automatic,Darah di mulutnya tiba tiba ilang,standalone,not_needed,[],,,10,True
+H008,clip_01,liked,csv_presentation_order,automatic,It was a bit funny ,standalone,not_needed,[],,,1,True
+H008,clip_01,disliked,csv_presentation_order,automatic,the quality is very much AI ,standalone,not_needed,[],,,1,True
+H008,clip_02,liked,csv_presentation_order,automatic,The video quality is more real,standalone,not_needed,[],,,2,True
+H008,clip_02,disliked,csv_presentation_order,automatic,too short can't grasp the concept of the video,standalone,not_needed,[],,,2,True
+H008,clip_03,liked,csv_presentation_order,automatic,The video quality is good,standalone,not_needed,[],,,3,True
+H008,clip_03,disliked,csv_presentation_order,automatic,It's boring so i did not finish it,standalone,not_needed,[],,,3,True
+H008,clip_04,liked,csv_presentation_order,automatic,story is complete even with a short clip,standalone,not_needed,[],,,4,True
+H008,clip_04,disliked,csv_presentation_order,automatic,I actually liked the video,standalone,not_needed,[],,,4,True
+H008,clip_05,liked,csv_presentation_order,automatic,i like the new concept of the vid,standalone,not_needed,[],,,5,True
+H008,clip_05,disliked,csv_presentation_order,automatic,It was not catchy enough for me to finish the whole thing,standalone,not_needed,[],,,5,True
+H008,clip_06,liked,csv_presentation_order,automatic,interesting concept,standalone,not_needed,[],,,6,True
+H008,clip_06,disliked,csv_presentation_order,automatic,too short,standalone,not_needed,[],,,6,True
+H008,clip_07,liked,csv_presentation_order,automatic,good quality,standalone,not_needed,[],,,7,True
+H008,clip_07,disliked,csv_presentation_order,automatic,too short,standalone,not_needed,[],,,7,True
+H008,clip_08,liked,csv_presentation_order,automatic,good quality and effects,standalone,not_needed,[],,,8,True
+H008,clip_08,disliked,csv_presentation_order,automatic,too short and progression is too fast,standalone,not_needed,[],,,8,True
+H008,clip_09,liked,csv_presentation_order,automatic,new concept,standalone,not_needed,[],,,9,True
+H008,clip_09,disliked,csv_presentation_order,automatic,a bit boring,standalone,not_needed,[],,,9,True
+H008,clip_10,liked,csv_presentation_order,automatic,new concept,standalone,not_needed,[],,,10,True
+H008,clip_10,disliked,csv_presentation_order,automatic,transition is too fast,standalone,not_needed,[],,,10,True
+H009,clip_01,liked,csv_presentation_order,automatic,Comedy part,standalone,not_needed,[],,,1,True
+H009,clip_01,disliked,csv_presentation_order,automatic,Animation very unpolished,standalone,not_needed,[],,,1,True
+H009,clip_02,liked,csv_presentation_order,automatic,Good Visual,standalone,not_needed,[],,,2,True
+H009,clip_02,disliked,csv_presentation_order,automatic,No context? what is the story not even a voice,standalone,not_needed,[],,,2,True
+H009,clip_03,liked,csv_presentation_order,automatic,Good visual atleast better and it has voice,standalone,not_needed,[],,,3,True
+H009,clip_03,disliked,csv_presentation_order,automatic,just dont really like this kind of set/theme,standalone,not_needed,[],,,3,True
+H009,clip_04,liked,csv_presentation_order,automatic,Its a meme,standalone,not_needed,[],,,4,True
+H009,clip_04,disliked,csv_presentation_order,automatic,Because its only a meme reference i dont think theres an entertainment,standalone,not_needed,[],,,4,True
+H009,clip_05,liked,csv_presentation_order,automatic,Maybe it has one of the best video for story telling,standalone,not_needed,[],,,5,True
+H009,clip_05,disliked,csv_presentation_order,automatic,i just dont like the voice because its not synchronized,standalone,not_needed,[],,,5,True
+H009,clip_06,liked,csv_presentation_order,automatic,It felt empty theres no good thing,standalone,not_needed,[],,,6,True
+H009,clip_06,disliked,csv_presentation_order,automatic,It felt empty theres no good thing,standalone,not_needed,[],,,6,True
+H009,clip_07,liked,csv_presentation_order,automatic,It has a story atleast and good visual,standalone,not_needed,[],,,7,True
+H009,clip_07,disliked,csv_presentation_order,automatic,why the camera angle so weird and also the character switching place from left to right side?,standalone,not_needed,[],,,7,True
+H009,clip_08,liked,csv_presentation_order,automatic,Good effect,standalone,not_needed,[],,,8,True
+H009,clip_08,disliked,csv_presentation_order,automatic,Suddenly changed clothes without a good reason?,standalone,not_needed,[],,,8,True
+H009,clip_09,liked,csv_presentation_order,automatic,The visual is very bad the character art style not even same,standalone,not_needed,[],,,9,True
+H009,clip_09,disliked,csv_presentation_order,automatic,The visual is very bad the character art style not even same,standalone,not_needed,[],,,9,True
+H009,clip_10,liked,csv_presentation_order,automatic,The story kinda good and the voice also help,standalone,not_needed,[],,,10,True
+H009,clip_10,disliked,csv_presentation_order,automatic,The Visual changed a lot from before stabbed to stabbed theres an abnormality,standalone,not_needed,[],,,10,True
+H010,clip_01,liked,csv_presentation_order,automatic,"Detail gerakan karakter tidak kaku, karakter dan detail background saling melengkapi namun, masih terdapat sedikit detail perubahan bentuk karakter perempuan ( dari perempuan dewasa menjadi seorang anak kecil, lalu berubah lagi) ",standalone,not_needed,[],,,1,True
+H010,clip_01,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,1,True
+H010,clip_02,liked,csv_presentation_order,automatic,"Saya suka videonya karena jauh terlihat lebih realistis, dan rasanya seperti menonton short drama china, lebih realistis ",standalone,not_needed,[],,,2,True
+H010,clip_02,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,2,True
+H010,clip_03,liked,csv_presentation_order,review_override,"Video seperti sebelumnya, menggunakan manusia realistis sebagai karakter, detail suasana dan mimik wajah mendukung konsep cerita yang akan dibawakan",standalone,not_needed,[],,,3,True
+H010,clip_03,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,3,True
+H010,clip_04,liked,csv_presentation_order,automatic,Video tersebut menggambarkan suasana dan emosional karakter,standalone,not_needed,[],,,4,True
+H010,clip_04,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,4,True
+H010,clip_05,liked,csv_presentation_order,automatic,"Video ini tidak terasa seperti AI, penggunaan AI terlihat sebagai visualisasi teknologi, seperti menonton sebuah scene dalam drama",standalone,not_needed,[],,,5,True
+H010,clip_05,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,5,True
+H010,clip_06,liked,csv_presentation_order,automatic,"detail penggunaan bahasa inggris dibanding china membuat semua audiens dapat memahami isi cerita dengan baik, pemberian subtitle juga",standalone,not_needed,[],,,6,True
+H010,clip_06,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,6,True
+H010,clip_07,liked,csv_presentation_order,automatic,"Penggambaran mimik wajah karakter tidak kaku, mimik saat bicara juga cocok jadi tidak kelihatan aneh yang cowo berbicara dan mulut yg cewe tidak bergerak",standalone,not_needed,[],,,7,True
+H010,clip_07,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,7,True
+H010,clip_08,liked,csv_presentation_order,automatic,"karakternya realistis dan suasananya menarik, magic, namun ada space perempuan yg pertama seperti duduk, lalu scene selanjutnya jadi berdiri",standalone,not_needed,[],,,8,True
+H010,clip_08,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,8,True
+H010,clip_09,liked,csv_presentation_order,automatic,"video singkat dari AI ini menimbulkan rasa penasaran akan kelanjutannya, latar suasana dan emosional karakternya terasa",standalone,not_needed,[],,,9,True
+H010,clip_09,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,9,True
+H010,clip_10,liked,csv_presentation_order,automatic,"Cuplikan videonya menarik, penggambaran karakter juga cukup bagus",standalone,not_needed,[],,,10,True
+H010,clip_10,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,10,True
+H011,clip_01,liked,csv_presentation_order,automatic,"Grafik nya sudah sangat baik lalu teks, suara, dan bentuk bibir saat berbicara sudah sesuai.",standalone,not_needed,[],,,1,True
+H011,clip_01,disliked,csv_presentation_order,automatic,"Karna ini drama kolosal china saya cenderung tidak menikmati jika tidak menggunakan bahasa yang tidak sesuai (bahasa Mandarin) lalu beberapa mimik wajah yang masih belum terlalu nyata seperti buliran tangisan dan mimik kaget yang tidak natural, bagian akhir ketika ganti sudut pandang kamera bentuk badan berubah.",standalone,not_needed,[],,,1,True
+H011,clip_02,liked,csv_presentation_order,automatic,"Wajah sudah di buat senatural mungkin, dan gestur badan juga tidak terlihat terlalu kaku",standalone,not_needed,[],,,2,True
+H011,clip_02,disliked,csv_presentation_order,automatic,Detail yang tidak sama seperti pada saat wanita yang di culik membuka pintu mobil dia tidak menggunakan jam tetapi setelahnya dia memencet jam di tangannya.,standalone,not_needed,[],,,2,True
+H011,clip_03,liked,csv_presentation_order,automatic,"Detail terkecil seperti anting yang digunakan tetap sama dan tidak berubah, mimik wajah juga terlihat natural ",standalone,not_needed,[],,,3,True
+H011,clip_03,disliked,csv_presentation_order,automatic,Saya menyadari di bagian meja ada piring yang di depan si pria tetapi tidak di sajikan menghadap si pria,standalone,not_needed,[],,,3,True
+H011,clip_04,liked,csv_presentation_order,automatic,Ekspresi yang natural dan detail yang tetap sama,standalone,not_needed,[],,,4,True
+H011,clip_04,disliked,csv_presentation_order,automatic,"Detail seperti tindik hidung di awal tidak ada, ketika pria itu mengeluarkan baju juga tidak terlihat nyata",standalone,not_needed,[],,,4,True
+H011,clip_05,liked,csv_presentation_order,review_override,"Bagian wajah bahkan lebih natural dari vidio sebelumnya, sudah terlihat lebih nyata bagaimana dia memegang gelas",standalone,not_needed,[],,,5,True
+H011,clip_05,disliked,csv_presentation_order,automatic,"Vidio gedung di bagian awal sangat tidak nyata, suara dan mimik bibir saat berbicara tidak natural membuat tidak nyaman di tonton ",standalone,not_needed,[],,,5,True
+H011,clip_06,liked,csv_presentation_order,automatic,"Bagian wajah tetap sama tidak berubah, dan sudah tidak terlalu kaku di mimik wajah",standalone,not_needed,[],,,6,True
+H011,clip_06,disliked,csv_presentation_order,review_override,"Suara dan bentuk bibir saat berbicara tidak sama, saat ganti sudut pandangan kamera juga terlihat tidak sama dengan sebelumnya, ekspresi tidak natural seperti kaget yang berlebihan ",standalone,not_needed,[],,,6,True
+H011,clip_07,liked,csv_presentation_order,automatic,"Detail seperti kerutan diwajah pria dan beberapa ekspresi sudah natural, bentuk wajah tidak terlihat terlalu ai ",standalone,not_needed,[],,,7,True
+H011,clip_07,disliked,csv_presentation_order,automatic,"Detail seperti mimik kaget terlalu berlebih-lebihan, saat berganti kamera detail seperti selang oksigen di bawah dagu berubah ",standalone,not_needed,[],,,7,True
+H011,clip_08,liked,csv_presentation_order,automatic,"Detail wajah seperti rona merah di pipi sudah natural, dan tidak ada perubahan di bagian pemeran",standalone,not_needed,[],,,8,True
+H011,clip_08,disliked,csv_presentation_order,automatic,"Scene yang berubah terlalu cepat membuat bingung, pada bagian borgol wanita dia terlambat terkejut ",standalone,not_needed,[],,,8,True
+H011,clip_09,liked,csv_presentation_order,automatic,"Detail wajah cukup baik, buliran tangisan terlihat lebih nyata ",standalone,not_needed,[],,,9,True
+H011,clip_09,disliked,csv_presentation_order,review_override,"Saat ibu berkata ""no"" latar berbeda dari saat bayi akan jatuh padahal seharusnya ibu ada di belakang baik atau di bagian latar yang sama. Wajah cukup natural tetapi tidak senatural vidio ai sebelum-sebelumnya (b aja)",standalone,not_needed,[],,,9,True
+H011,clip_10,liked,csv_presentation_order,automatic,Bagian grafik wajah cukup baik,standalone,not_needed,[],,,10,True
+H011,clip_10,disliked,csv_presentation_order,automatic,"Detail seperti kalung saat dia jatuh tidak sama, lalu saat akan di tusuk seolah dia sudah tau dan sudah siap(tidak natural) ",standalone,not_needed,[],,,10,True
+H012,clip_01,liked,csv_presentation_order,automatic,Ak suka video AI barusan karena visualnya menarikk😋😋,standalone,not_needed,[],,,1,True
+H012,clip_01,disliked,csv_presentation_order,automatic,"Sebenernya ga yang ga suka banget sih,, tpi gatau kenapa kalau video AI kayak kurang nyaman aja nontonnya",standalone,not_needed,[],,,1,True
+H012,clip_02,liked,csv_presentation_order,automatic,terlihat agak sedikit reall,standalone,not_needed,[],,,2,True
+H012,clip_02,disliked,csv_presentation_order,automatic,menurut aku gerakannya agak kakuu,standalone,not_needed,[],,,2,True
+H012,clip_03,liked,csv_presentation_order,automatic,ini visualnya agak lebih detail sih,standalone,not_needed,[],,,3,True
+H012,clip_03,disliked,csv_presentation_order,automatic,kurang hidup videonya,standalone,not_needed,[],,,3,True
+H012,clip_04,liked,csv_presentation_order,automatic,terlalu jelas AI nya,standalone,not_needed,[],,,4,True
+H012,clip_04,disliked,csv_presentation_order,automatic,menurut aku agak ga wajar pas scene ngeluarin baju dri paperbagnya itu,standalone,not_needed,[],,,4,True
+H012,clip_05,liked,csv_presentation_order,automatic,"jujur ini ga keliatan begitu AI, keliatan kyk video yang emang bener2 di take",standalone,not_needed,[],,,5,True
+H012,clip_05,disliked,csv_presentation_order,automatic,"dubbing nya agak kurang pas, atau karna itu sebenernya dubbing chinese ya??",standalone,not_needed,[],,,5,True
+H012,clip_06,liked,csv_presentation_order,automatic,"engga adaa awok..kurang suka dari segi story, visual, sm gerakannya juga",standalone,not_needed,[],,,6,True
+H012,clip_06,disliked,csv_presentation_order,automatic,"kaku bgtt, videonya ga hidup, dubbingnya juga ga pas",standalone,not_needed,[],,,6,True
+H012,clip_07,liked,csv_presentation_order,automatic,visualnya aku suka hehe,standalone,not_needed,[],,,7,True
+H012,clip_07,disliked,csv_presentation_order,automatic,kyk kurang hidup (maaf jawab ini lgi😂✌️),standalone,not_needed,[],,,7,True
+H012,clip_08,liked,csv_presentation_order,automatic,visualnya menarikk,standalone,not_needed,[],,,8,True
+H012,clip_08,disliked,csv_presentation_order,automatic,eh jujur ga masuk akal ya tiba2 ada bump gtu,standalone,not_needed,[],,,8,True
+H012,clip_09,liked,csv_presentation_order,automatic,storynya kyknya seru,standalone,not_needed,[],,,9,True
+H012,clip_09,disliked,csv_presentation_order,automatic,kurang smooth,standalone,not_needed,[],,,9,True
+H012,clip_10,liked,csv_presentation_order,automatic,visualnya baguss,standalone,not_needed,[],,,10,True
+H012,clip_10,disliked,csv_presentation_order,automatic,"sama sih,, kurang smooth",standalone,not_needed,[],,,10,True
+H013,clip_01,liked,csv_presentation_order,automatic,casually love wasting time to watch some random clip hahahha its always excited me,standalone,not_needed,[],,,1,True
+H013,clip_01,disliked,csv_presentation_order,automatic,"maybe the dialog little bit cringe, but overall its good",standalone,not_needed,[],,,1,True
+H013,clip_02,liked,csv_presentation_order,automatic,"again, i think i will say i like the video because i just like to watch random clip hahahhaha",standalone,not_needed,[],,,2,True
+H013,clip_02,disliked,csv_presentation_order,automatic,"maybe the nonsense thing about the arm ? but its i know its AI, what did you expect?",standalone,not_needed,[],,,2,True
+H013,clip_03,liked,csv_presentation_order,automatic,better graphic from the other 2,standalone,not_needed,[],,,3,True
+H013,clip_03,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,3,True
+H013,clip_04,liked,csv_presentation_order,automatic,nothing special but i just like to watch,standalone,not_needed,[],,,4,True
+H013,clip_04,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,4,True
+H013,clip_05,liked,csv_presentation_order,automatic,-,missing,not_needed,[],,,5,True
+H013,clip_05,disliked,csv_presentation_order,automatic,"i dont think its an AI dramas, for the building scene yes, but the rest its like from dracin",standalone,not_needed,[],,,5,True
+H013,clip_06,liked,csv_presentation_order,automatic,-,missing,not_needed,[],,,6,True
+H013,clip_06,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,6,True
+H013,clip_07,liked,csv_presentation_order,automatic,i just like to watch,standalone,not_needed,[],,,7,True
+H013,clip_07,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,7,True
+H013,clip_08,liked,csv_presentation_order,automatic,i like fiction AI dramas,standalone,not_needed,[],,,8,True
+H013,clip_08,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,8,True
+H013,clip_09,liked,csv_presentation_order,automatic,-,missing,not_needed,[],,,9,True
+H013,clip_09,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,9,True
+H013,clip_10,liked,csv_presentation_order,automatic,i like fiction dramas about revenge hahahha,standalone,not_needed,[],,,10,True
+H013,clip_10,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,10,True
+H014,clip_01,liked,csv_presentation_order,automatic,the girl so pretty ,standalone,not_needed,[],,,1,True
+H014,clip_01,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,1,True
+H014,clip_02,liked,csv_presentation_order,automatic,nice animation ,standalone,not_needed,[],,,2,True
+H014,clip_02,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,2,True
+H014,clip_03,liked,csv_presentation_order,automatic,the sexy plot ,standalone,not_needed,[],,,3,True
+H014,clip_03,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,3,True
+H014,clip_04,liked,csv_presentation_order,automatic,surprise story,standalone,not_needed,[],,,4,True
+H014,clip_04,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,4,True
+H014,clip_05,liked,csv_presentation_order,automatic,i like the aktors ,standalone,not_needed,[],,,5,True
+H014,clip_05,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,5,True
+H014,clip_06,liked,csv_presentation_order,automatic,like the storyline  ,standalone,not_needed,[],,,6,True
+H014,clip_06,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,6,True
+H014,clip_07,liked,csv_presentation_order,automatic,like it because it's not boring,standalone,not_needed,[],,,7,True
+H014,clip_07,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,7,True
+H014,clip_08,liked,csv_presentation_order,automatic,amazing storyline ,standalone,not_needed,[],,,8,True
+H014,clip_08,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,8,True
+H014,clip_09,liked,csv_presentation_order,automatic,the handsome “papa”,standalone,not_needed,[],,,9,True
+H014,clip_09,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,9,True
+H014,clip_10,liked,csv_presentation_order,automatic,good job girlll,standalone,not_needed,[],,,10,True
+H014,clip_10,disliked,csv_presentation_order,automatic,-,missing,not_needed,[],,,10,True
+H015,clip_01,liked,csv_presentation_order,automatic,"Suka, karena visual/karakter nya yang lucu ",standalone,not_needed,[],,,1,True
+H015,clip_01,disliked,csv_presentation_order,automatic,Kurangnya mungkin transisi dialognya agak kecepetan jadi bikin bingung saking randomnya adegan mereka ketemu di situ.,standalone,not_needed,[],,,1,True
+H015,clip_02,liked,csv_presentation_order,automatic,Suka banget sama adegan awalnya pas cewek berjas hitam itu nyergap dan ngebekap korban dari belakang,standalone,not_needed,[],,,2,True
+H015,clip_02,disliked,csv_presentation_order,automatic,Karena di video tiba2 muncul pencet jam tangan trs pemerannya tiba2 pingsan,standalone,not_needed,[],,,2,True
+H015,clip_03,liked,csv_presentation_order,automatic,"Seru sih, bagian awal pas cowoknya bikin kaget soalnya dia tau nama ceweknya padahal mereka baru ketemu di blind date setting, bikin penasaran aja alurnya bakal gimana",standalone,not_needed,[],,,3,True
+H015,clip_03,disliked,csv_presentation_order,automatic,Agak cringe aja sih si cewek kaget tiba2 dpt surprise gitu,standalone,not_needed,[],,,3,True
+H015,clip_04,liked,csv_presentation_order,automatic,"Suka banget pas bagian quotes ""If he wanted to he would"" Wkwkwkwk anjay",standalone,not_needed,[],,,4,True
+H015,clip_04,disliked,csv_presentation_order,automatic,videonya kerasa agak singkat banget dan monoton karena cuma muter satu kalimat itu doang,standalone,not_needed,[],,,4,True
+H015,clip_05,liked,csv_presentation_order,automatic,Pas mereka berdua bahas mau nyuri rahasia perusahaan ,standalone,not_needed,[],,,5,True
+H015,clip_05,disliked,csv_presentation_order,automatic,"pas mereka ngomongin kartu izin tinggal, ekspresi muka karakternya rada kaku, jadi kurang greget aja gitu liatnya.",standalone,not_needed,[],,,5,True
+H015,clip_06,liked,csv_presentation_order,automatic,greget pas adegan si temennya tega banget ngejual sahabatnya sendiri demi duit 5 juta doang,standalone,not_needed,[],,,6,True
+H015,clip_06,disliked,csv_presentation_order,automatic,"Gk suka bgt sama adegan yg pemaksaan gitu ke cewek, pasti kebanyakan video kyk gitu di internet",standalone,not_needed,[],,,6,True
+H015,clip_07,liked,csv_presentation_order,automatic,Jujur kurang suka adegannyaa,standalone,not_needed,[],,,7,True
+H015,clip_07,disliked,csv_presentation_order,automatic,"gajelasnya tuh alur soal ""severe rejection"" atau penolakan medisnya kerasa maksain bgt kek gk asli gitu",standalone,not_needed,[],,,7,True
+H015,clip_08,liked,csv_presentation_order,automatic,Pas pemeran wanita nya dibantuin sama pemeran utama pria ngubah gaunnya yg kebakar jadi dress kerenn,standalone,not_needed,[],,,8,True
+H015,clip_08,disliked,csv_presentation_order,automatic,Hmm hukuman yg antagonis nya kurang lama sih hehehe,standalone,not_needed,[],,,8,True
+H015,clip_09,liked,csv_presentation_order,automatic,"Pas bayi nya jatuh trs bilang papa, itu plot twist bgt dan pastinya kaget wkwkwk",standalone,not_needed,[],,,9,True
+H015,clip_09,disliked,csv_presentation_order,automatic,Audio nya agak mendem aja sih kalo didenger,standalone,not_needed,[],,,9,True
+H015,clip_10,liked,csv_presentation_order,automatic,"Pas adegan hidup lagi dan nekat milih jalan yang beda, berasa dapet vibes lega kayak ""wah, saatnya balas dendam nih sama tuh cowok brengsek!""",standalone,not_needed,[],,,10,True
+H015,clip_10,disliked,csv_presentation_order,automatic,"Adegan tentang terlahir kembali tuh jujur bosenin, soalnya kyk alur ceritanya tuh hampir sama semua cmn bedainnya ya latar nya aja",standalone,not_needed,[],,,10,True
+H016,clip_01,liked,csv_presentation_order,automatic,Its like from rush hour scene with chris tucker & master yu,standalone,not_needed,[],,,1,True
+H016,clip_01,disliked,csv_presentation_order,automatic,NA,missing,not_needed,[],,,1,True
+H016,clip_02,liked,csv_presentation_order,automatic,NA,missing,not_needed,[],,,2,True
+H016,clip_02,disliked,csv_presentation_order,automatic,"no other context, just kidnapping scene",standalone,not_needed,[],,,2,True
+H016,clip_03,liked,csv_presentation_order,automatic,NA,missing,not_needed,[],,,3,True
+H016,clip_03,disliked,csv_presentation_order,automatic,"cliffhanger scene, didnt know where they meet but piqued my interest",standalone,not_needed,[],,,3,True
+H016,clip_04,liked,csv_presentation_order,automatic,"Got me in the first half, but kinda wholesome ",standalone,not_needed,[],,,4,True
+H016,clip_04,disliked,csv_presentation_order,automatic,NA,missing,not_needed,[],,,4,True
+H016,clip_05,liked,csv_presentation_order,automatic,"Very typical drama series, love to see it in aw",standalone,not_needed,[],,,5,True
+H016,clip_05,disliked,csv_presentation_order,automatic,na,missing,not_needed,[],,,5,True
+H016,clip_06,liked,csv_presentation_order,automatic,"Yes, i wonder how she will get out of that situation",standalone,not_needed,[],,,6,True
+H016,clip_06,disliked,csv_presentation_order,automatic,NA,missing,not_needed,[],,,6,True
+H016,clip_07,liked,csv_presentation_order,automatic,NA,missing,not_needed,[],,,7,True
+H016,clip_07,disliked,csv_presentation_order,automatic,"Why is the girl hating on him tho, dont die girl",standalone,not_needed,[],,,7,True
+H016,clip_08,liked,csv_presentation_order,automatic,Cool animation even if its ai,standalone,not_needed,[],,,8,True
+H016,clip_08,disliked,csv_presentation_order,automatic,na,missing,not_needed,[],,,8,True
+H016,clip_09,liked,csv_presentation_order,automatic,The concept like cinderella is cool but fantasy with dragon/demon ,standalone,not_needed,[],,,9,True
+H016,clip_09,disliked,csv_presentation_order,automatic,NA,missing,not_needed,[],,,9,True
+H016,clip_10,liked,csv_presentation_order,automatic,"Good concept movie, wanna watch the revenge plot",standalone,not_needed,[],,,10,True
+H016,clip_10,disliked,csv_presentation_order,automatic,na,missing,not_needed,[],,,10,True
+H017,clip_01,liked,csv_presentation_order,automatic,its hilarious,standalone,not_needed,[],,,1,True
+H017,clip_01,disliked,csv_presentation_order,automatic,i dont dislike the video ,standalone,not_needed,[],,,1,True
+H017,clip_02,liked,csv_presentation_order,automatic,video length is too short to determine if i like / dislike,standalone,not_needed,[],,,2,True
+H017,clip_02,disliked,csv_presentation_order,automatic,"it is AI generated, so it seems choppy",standalone,not_needed,[],,,2,True
+H017,clip_03,liked,csv_presentation_order,automatic," If this is a love series, it is decent",standalone,not_needed,[],,,3,True
+H017,clip_03,disliked,csv_presentation_order,automatic,i dont dislike anything about the video as it is too short to determine,standalone,not_needed,[],,,3,True
+H017,clip_04,liked,csv_presentation_order,automatic,it has a twist in the ending,standalone,not_needed,[],,,4,True
+H017,clip_04,disliked,csv_presentation_order,automatic,dont think theres much to dislike about the  video,standalone,not_needed,[],,,4,True
+H017,clip_05,liked,csv_presentation_order,automatic,the expression seems decent enough,standalone,not_needed,[],,,5,True
+H017,clip_05,disliked,csv_presentation_order,automatic,i do not like the AI generated voice,standalone,not_needed,[],,,5,True
+H017,clip_06,liked,csv_presentation_order,automatic,seems like a possible chinese / hk drama plot,standalone,not_needed,[],,,6,True
+H017,clip_06,disliked,csv_presentation_order,automatic,the AI generated voice,standalone,not_needed,[],,,6,True
+H017,clip_07,liked,csv_presentation_order,automatic,AI generated for english looking actor seems decent,standalone,not_needed,[],,,7,True
+H017,clip_07,disliked,csv_presentation_order,automatic,nothing ,no_reason,not_needed,[],,,7,True
+H017,clip_08,liked,csv_presentation_order,automatic,animation seems decent,standalone,not_needed,[],,,8,True
+H017,clip_08,disliked,csv_presentation_order,automatic,im not sure if there is anything i dislike,standalone,not_needed,[],,,8,True
+H017,clip_09,liked,csv_presentation_order,automatic,animation is decent,standalone,not_needed,[],,,9,True
+H017,clip_09,disliked,csv_presentation_order,automatic,nothing i dislike,standalone,not_needed,[],,,9,True
+H017,clip_10,liked,csv_presentation_order,automatic,seems like a decent english drama,standalone,not_needed,[],,,10,True
+H017,clip_10,disliked,csv_presentation_order,automatic,nothing i dislike but seems like typical anime reborn kind of show,standalone,not_needed,[],,,10,True
+H018,clip_01,liked,csv_presentation_order,automatic,I didn’t like any aspect provided in the video.,standalone,not_needed,[],,,1,True
+H018,clip_01,disliked,csv_presentation_order,automatic,"I hate the dub, the inconsistency of the art style & character movement",standalone,not_needed,[],,,1,True
+H018,clip_02,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,2,True
+H018,clip_02,disliked,csv_presentation_order,automatic,"Aneh & ga jelas jir, di early part cewe yang nyulik tau tau di bawa ke tempat au apaan sama bapak bapak botak damn serem",standalone,not_needed,[],,,2,True
+H018,clip_03,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,3,True
+H018,clip_03,disliked,csv_presentation_order,automatic,"Klo boleh sbnrnya 1,5 tapi gaada di option yaudeh 2 aja. Yang ini better krn background location nya jelas & konsisten. Konteks ceritanya juga nyambung mayan lah",standalone,not_needed,[],,,3,True
+H018,clip_04,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,4,True
+H018,clip_04,disliked,csv_presentation_order,automatic,The dress should come from INSIDE the bag and not BEHIND the bag?? Ganggu mata,standalone,not_needed,[],,,4,True
+H018,clip_05,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,5,True
+H018,clip_05,disliked,csv_presentation_order,automatic,Hate the dub and placement elemen yg kadang ganggu muka org nya,standalone,not_needed,[],,,5,True
+H018,clip_06,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,6,True
+H018,clip_06,disliked,csv_presentation_order,automatic,I hate the dub (again) & character movement nya lompat lompat/pindah pindah bikin makin aneh,standalone,not_needed,[],,,6,True
+H018,clip_07,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,7,True
+H018,clip_07,disliked,csv_presentation_order,automatic,"Character movement & blocking pindah pindah, masa dr kiri pindah ke kanan bos? Lu muterin bed org sakit nya apa gimane",standalone,not_needed,[],,,7,True
+H018,clip_08,liked,csv_presentation_order,automatic,"For an ai generated video, ini udh paling top animasi. Animasi rapih & tepat gitu kokoh, blocking character jg ok tp gue ttp gasuka 😂😂😂😂 ",standalone,not_needed,[],,,8,True
+H018,clip_08,disliked,csv_presentation_order,automatic,Ai gen,standalone,not_needed,[],,,8,True
+H018,clip_09,liked,csv_presentation_order,automatic,None,no_reason,not_needed,[],,,9,True
+H018,clip_09,disliked,csv_presentation_order,automatic,Unrealistic BIG EYES LOLL,standalone,not_needed,[],,,9,True
+H018,clip_10,liked,csv_presentation_order,automatic,"That black horn men made it jump to 2. He’s cute klo bnrn ada character nya ay, shy nerd lalapan gue.",standalone,not_needed,[],,,10,True
+H018,clip_10,disliked,csv_presentation_order,automatic,HATE the dub,standalone,not_needed,[],,,10,True
+H019,clip_01,liked,csv_presentation_order,automatic,The art of technology. Can make a story alive without hiring actors or celebrities.,standalone,not_needed,[],,,1,True
+H019,clip_01,disliked,csv_presentation_order,automatic,"Its odd to watch AI chinese history background combine with English dubbing.
+The movement of bodies art styles looks fake.   ",standalone,not_needed,[],,,1,True
+H019,clip_02,liked,csv_presentation_order,automatic,Looks human ,standalone,not_needed,[],,,2,True
+H019,clip_02,disliked,csv_presentation_order,automatic,It looks weird and doesn't make sense when her arm stretches out,standalone,not_needed,[],,,2,True
+H019,clip_03,liked,csv_presentation_order,automatic,The art running smoothly..,standalone,not_needed,[],,,3,True
+H019,clip_03,disliked,csv_presentation_order,automatic,So sad when when Ai take overs actors job,standalone,not_needed,[],,,3,True
+H019,clip_04,liked,csv_presentation_order,automatic,The art running smoothly..,standalone,not_needed,[],,,4,True
+H019,clip_04,disliked,csv_presentation_order,automatic,So sad when when Ai take overs actors job,standalone,not_needed,[],,,4,True
+H019,clip_05,liked,csv_presentation_order,automatic,Looks human,standalone,not_needed,[],,,5,True
+H019,clip_05,disliked,csv_presentation_order,automatic,"The lip-sync doesn't match the audio, and the weird visuals have no correlation with the story.",standalone,not_needed,[],,,5,True
+H019,clip_06,liked,csv_presentation_order,automatic,Looks human,standalone,not_needed,[],,,6,True
+H019,clip_06,disliked,csv_presentation_order,automatic,"The lip-sync doesn't match the audio, and its weird using english with chinese visuals ",standalone,not_needed,[],,,6,True
+H019,clip_07,liked,csv_presentation_order,automatic,There is a correlation using english language with the white man,standalone,not_needed,[],,,7,True
+H019,clip_07,disliked,csv_presentation_order,automatic,Boring,standalone,not_needed,[],,,7,True
+H019,clip_08,liked,csv_presentation_order,automatic,Looks natural,standalone,not_needed,[],,,8,True
+H019,clip_08,disliked,csv_presentation_order,automatic,The art n story looks good,standalone,not_needed,[],,,8,True
+H019,clip_09,liked,csv_presentation_order,automatic,The Ai art's looks human,standalone,not_needed,[],,,9,True
+H019,clip_09,disliked,csv_presentation_order,automatic,The baby' face unatural,standalone,not_needed,[],,,9,True
+H019,clip_10,liked,csv_presentation_order,automatic,Looks human,standalone,not_needed,[],,,10,True
+H019,clip_10,disliked,csv_presentation_order,automatic,No dislike,standalone,not_needed,[],,,10,True
+H020,clip_01,liked,csv_presentation_order,automatic,IT IS FUNNY,standalone,not_needed,[],,,1,True
+H020,clip_01,disliked,csv_presentation_order,automatic,its in english maybe the animation looks more of chinese so should have chinese voice too,standalone,not_needed,[],,,1,True
+H020,clip_02,liked,csv_presentation_order,automatic,nothing the girls are beautiful maybe,standalone,not_needed,[],,,2,True
+H020,clip_02,disliked,csv_presentation_order,automatic,there is no plot or anything,standalone,not_needed,[],,,2,True
+H020,clip_03,liked,csv_presentation_order,automatic,it seems real,standalone,not_needed,[],,,3,True
+H020,clip_03,disliked,csv_presentation_order,automatic,too much of a cliffhanger but that is the selling point of short clips,standalone,not_needed,[],,,3,True
+H020,clip_04,liked,csv_presentation_order,automatic,the guy came back atleast,standalone,not_needed,[],,,4,True
+H020,clip_04,disliked,csv_presentation_order,automatic,the guy himself,standalone,not_needed,[],,,4,True
+H020,clip_05,liked,csv_presentation_order,automatic,the plot was almost built but not completely,standalone,not_needed,[],,,5,True
+H020,clip_05,disliked,csv_presentation_order,automatic,should have left on the cliffhanger rather than being half-baked ,standalone,not_needed,[],,,5,True
+H020,clip_06,liked,csv_presentation_order,automatic,The plot is there,standalone,not_needed,[],,,6,True
+H020,clip_06,disliked,csv_presentation_order,automatic,the vocals should be on their respective language would have been nicer,standalone,not_needed,[],,,6,True
+H020,clip_07,liked,csv_presentation_order,automatic,everything seems natural seems interesting,standalone,not_needed,[],,,7,True
+H020,clip_07,disliked,csv_presentation_order,automatic,the plot is cutoff ,standalone,not_needed,[],,,7,True
+H020,clip_08,liked,csv_presentation_order,automatic,looks natural and interesting caught my attention by starting of with a good plot,standalone,not_needed,[],,,8,True
+H020,clip_08,disliked,csv_presentation_order,automatic,nothing,no_reason,not_needed,[],,,8,True
+H020,clip_09,liked,csv_presentation_order,automatic,"he graphics and everything is okay, good but incomplete story",standalone,not_needed,[],,,9,True
+H020,clip_09,disliked,csv_presentation_order,automatic,incomplete plot needs more,standalone,not_needed,[],,,9,True
+H020,clip_10,liked,csv_presentation_order,automatic,Magic reincarnation and betrayal ,standalone,not_needed,[],,,10,True
+H020,clip_10,disliked,csv_presentation_order,automatic,its good,standalone,not_needed,[],,,10,True
+H021,clip_01,liked,csv_presentation_order,automatic,Alur cerita dan dubbingnya pas,standalone,not_needed,[],,,1,True
+H021,clip_01,disliked,csv_presentation_order,automatic,Kecerahan video kurang,standalone,not_needed,[],,,1,True
+H021,clip_02,liked,csv_presentation_order,automatic,Kecerahan gambar bagus,standalone,not_needed,[],,,2,True
+H021,clip_02,disliked,csv_presentation_order,automatic,Tangan yg turun /jatuh terlalu panjang shg tidak normal,standalone,not_needed,[],,,2,True
+H021,clip_03,liked,csv_presentation_order,automatic,Dubbing suara sdh pas,standalone,not_needed,[],,,3,True
+H021,clip_03,disliked,csv_presentation_order,automatic,Backsound terlalu keras,standalone,not_needed,[],,,3,True
+H021,clip_04,liked,csv_presentation_order,automatic,Bacsound sangat cocok,standalone,not_needed,[],,,4,True
+H021,clip_04,disliked,csv_presentation_order,automatic,Alur ceeita sedikit kurang,standalone,not_needed,[],,,4,True
+H021,clip_05,liked,csv_presentation_order,automatic,Kecerahan gambar ok,standalone,not_needed,[],,,5,True
+H021,clip_05,disliked,csv_presentation_order,automatic,Gerakan mulut dqn dubbing terlambat,standalone,not_needed,[],,,5,True
+H021,clip_06,liked,csv_presentation_order,automatic,Video error,standalone,not_needed,[],,,6,True
+H021,clip_06,disliked,csv_presentation_order,automatic,Video error,standalone,not_needed,[],,,6,True
+H021,clip_07,liked,csv_presentation_order,automatic,Contrast gambar bagus dan dubbing mulut aktor ok,standalone,not_needed,[],,,7,True
+H021,clip_07,disliked,csv_presentation_order,automatic,Pengambilan gambar terlalu zoom in,standalone,not_needed,[],,,7,True
+H021,clip_08,liked,csv_presentation_order,automatic,Dubbing dan gerakan mulut aktor bagus,standalone,not_needed,[],,,8,True
+H021,clip_08,disliked,csv_presentation_order,automatic,Music backsound tidak pas,standalone,not_needed,[],,,8,True
+H021,clip_09,liked,csv_presentation_order,automatic,Kontrast gambar dan dubbing ok,standalone,not_needed,[],,,9,True
+H021,clip_09,disliked,csv_presentation_order,automatic,Belum ada,standalone,not_needed,[],,,9,True
+H021,clip_10,liked,csv_presentation_order,automatic,Kecerahan gambar dan pergerakan aktor sdh bagus,standalone,not_needed,[],,,10,True
+H021,clip_10,disliked,csv_presentation_order,automatic,Peletakan tulisan /translate kurang ke bawah,standalone,not_needed,[],,,10,True
+H022,clip_01,liked,csv_presentation_order,automatic,The humour. Visuals are also good.,standalone,not_needed,[],,,1,True
+H022,clip_01,disliked,csv_presentation_order,automatic,The dubbing. Could have some improvement in this aspect.,standalone,not_needed,[],,,1,True
+H022,clip_02,liked,csv_presentation_order,automatic,Looks real.,standalone,not_needed,[],,,2,True
+H022,clip_02,disliked,csv_presentation_order,automatic,Transitions. It looked too abrupt.,standalone,not_needed,[],,,2,True
+H022,clip_03,liked,csv_presentation_order,automatic,The characters look like real people. Visuals are good.,standalone,not_needed,[],,,3,True
+H022,clip_03,disliked,csv_presentation_order,automatic,Choice of background music. Also the blocking and the direction of the eyes of the male character feel off.,standalone,not_needed,[],,,3,True
+H022,clip_04,liked,csv_presentation_order,automatic,Visual details are good.,standalone,not_needed,[],,,4,True
+H022,clip_04,disliked,csv_presentation_order,automatic,The message is confusing and misleading. ,standalone,not_needed,[],,,4,True
+H022,clip_05,liked,csv_presentation_order,automatic,Visual consistency and details.,standalone,not_needed,[],,,5,True
+H022,clip_05,disliked,csv_presentation_order,automatic,The dubbing is off.,standalone,not_needed,[],,,5,True
+H022,clip_06,liked,csv_presentation_order,automatic,Visuals look realistic.,standalone,not_needed,[],,,6,True
+H022,clip_06,disliked,csv_presentation_order,automatic,"Aside from the dubbing (voices), the consistency in their positions from point A to point B.",standalone,not_needed,[],,,6,True
+H022,clip_07,liked,csv_presentation_order,automatic,Visuals are good.,standalone,not_needed,[],,,7,True
+H022,clip_07,disliked,csv_presentation_order,automatic,But the male character's reactions are too exaggerated. ,standalone,not_needed,[],,,7,True
+H022,clip_08,liked,csv_presentation_order,automatic,The visuals are stunning.,standalone,not_needed,[],,,8,True
+H022,clip_08,disliked,csv_presentation_order,automatic,The background music is cringey.,standalone,not_needed,[],,,8,True
+H022,clip_09,liked,csv_presentation_order,automatic,The visuals match the fantasy plot.,standalone,not_needed,[],,,9,True
+H022,clip_09,disliked,csv_presentation_order,automatic,Music is too loud.,standalone,not_needed,[],,,9,True
+H022,clip_10,liked,csv_presentation_order,automatic,"Visuals, mostly. ",standalone,not_needed,[],,,10,True
+H022,clip_10,disliked,csv_presentation_order,automatic,Music is too overpowering.,standalone,not_needed,[],,,10,True
+H023,clip_01,liked,csv_presentation_order,automatic,"I actually enjoyed the video, especially because a little jokes in the video",standalone,not_needed,[],,,1,True
+H023,clip_01,disliked,csv_presentation_order,automatic,Nothing,no_reason,not_needed,[],,,1,True
+H023,clip_02,liked,csv_presentation_order,automatic,Im not really sure about the video means,standalone,not_needed,[],,,2,True
+H023,clip_02,disliked,csv_presentation_order,automatic,Im not really sure about the video means. Maybe you can give some hint with title,standalone,not_needed,[],,,2,True
+H023,clip_03,liked,csv_presentation_order,automatic,"I like it, cuz the video have a good video quality",standalone,not_needed,[],,,3,True
+H023,clip_03,disliked,csv_presentation_order,automatic,Nothing,no_reason,not_needed,[],,,3,True
+H023,clip_04,liked,csv_presentation_order,automatic,It reminds us to stay positive,standalone,not_needed,[],,,4,True
+H023,clip_04,disliked,csv_presentation_order,automatic,Nothing,no_reason,not_needed,[],,,4,True
+H023,clip_05,liked,csv_presentation_order,automatic,The graphic getting better,standalone,not_needed,[],,,5,True
+H023,clip_05,disliked,csv_presentation_order,automatic,Nothing,no_reason,not_needed,[],,,5,True
+H023,clip_06,liked,csv_presentation_order,automatic,Suspenseful,standalone,not_needed,[],,,6,True
+H023,clip_06,disliked,csv_presentation_order,automatic,It doesn't continue,standalone,not_needed,[],,,6,True
+H023,clip_07,liked,csv_presentation_order,automatic,Good graphic,standalone,not_needed,[],,,7,True
+H023,clip_07,disliked,csv_presentation_order,automatic,Common storyline,standalone,not_needed,[],,,7,True
+H023,clip_08,liked,csv_presentation_order,review_override,It's much better than the previous drama because the background music really brings the story to life.,standalone,not_needed,[],,,8,True
+H023,clip_08,disliked,csv_presentation_order,automatic,Nothing,no_reason,not_needed,[],,,8,True
+H023,clip_09,liked,csv_presentation_order,automatic,I don't like it because the storyline is always same,standalone,not_needed,[],,,9,True
+H023,clip_09,disliked,csv_presentation_order,automatic,I don't like it because the storyline is always same,standalone,not_needed,[],,,9,True
+H023,clip_10,liked,csv_presentation_order,automatic,"I like the grphic, itmakes watching more enjoyable",standalone,not_needed,[],,,10,True
+H023,clip_10,disliked,csv_presentation_order,automatic,The video is too short. Please give us the title,standalone,not_needed,[],,,10,True
+H024,clip_01,liked,csv_presentation_order,automatic,"Funny, when her cheek was swollen and when she fell",standalone,not_needed,[],,,1,True
+H024,clip_01,disliked,csv_presentation_order,automatic,"Back in my day, the phrase ""the fuck"" carried a negative meaning",standalone,not_needed,[],,,1,True
+H024,clip_02,liked,csv_presentation_order,automatic,a kidnapping drama that sparks curiosity,standalone,not_needed,[],,,2,True
+H024,clip_02,disliked,csv_presentation_order,automatic,"When his wristwatch was pressed, it felt absurd—his arm stretched downward",standalone,not_needed,[],,,2,True
+H024,clip_03,liked,csv_presentation_order,automatic,The language is clearly understandable,standalone,not_needed,[],,,3,True
+H024,clip_03,disliked,csv_presentation_order,automatic,The two women’s faces look the same; only their clothes distinguish them,standalone,not_needed,[],,,3,True
+H024,clip_04,liked,csv_presentation_order,automatic,"It turns out her husband is the loyal and attentive type, showing his care by buying his wife the clothes she wants",standalone,not_needed,[],,,4,True
+H024,clip_04,disliked,csv_presentation_order,automatic,"The skirt of the woman walking alone was too short, making her butt visible",standalone,not_needed,[],,,4,True
+H024,clip_05,liked,csv_presentation_order,automatic,The scenery and the building's architecture are beautiful,standalone,not_needed,[],,,5,True
+H024,clip_05,disliked,csv_presentation_order,automatic,the movement of their lips does not match with the pronunciation of their words,standalone,not_needed,[],,,5,True
+H024,clip_06,liked,csv_presentation_order,automatic,The betrayal of a friend—it’s something one is always curious to witness,standalone,not_needed,[],,,6,True
+H024,clip_06,disliked,csv_presentation_order,automatic,"Ordinarily, a woman who has consumed a drink spiked with drugs would immediately become weak; however, in the video, she is still resisting, and her face shows no signs of impairment",standalone,not_needed,[],,,6,True
+H024,clip_07,liked,csv_presentation_order,automatic,I do not permit you to die—an expression of deep affection,standalone,not_needed,[],,,7,True
+H024,clip_07,disliked,csv_presentation_order,automatic,the first words are i don't let you die... then the words this only ends when one of us is dead... the two words above are contradictory and confusing,standalone,not_needed,[],,,7,True
+H024,clip_08,liked,csv_presentation_order,automatic,"The use of magic and an absence of bullying in the classroom—a film that blends fantasy with reality, leaving one always curious about how it will all end...",standalone,not_needed,[],,,8,True
+H024,clip_08,disliked,csv_presentation_order,automatic,"The outfit is confusing; when burned, it transforms into a princess gown, but once the pregnancy is discovered, it changes into a uniform",standalone,not_needed,[],,,8,True
+H024,clip_09,liked,csv_presentation_order,automatic,The baby's face is cute...,standalone,not_needed,[],,,9,True
+H024,clip_09,disliked,csv_presentation_order,automatic,"The baby did not cry when it fell, and the mother was slow to react",standalone,not_needed,[],,,9,True
+H024,clip_10,liked,csv_presentation_order,automatic,The resulting video looks real; the costumes and faces don't look like AI,standalone,not_needed,[],,,10,True
+H024,clip_10,disliked,csv_presentation_order,automatic,"The appearance of a man with black horns caused confusion, as no one else had any horns...",standalone,not_needed,[],,,10,True
+H025,clip_01,liked,csv_presentation_order,automatic,"Expressions: expressions are express quite well for what the video had, Artstyle: artstyle almost looks like an actual brainrot mobile game ad as oppose to ai generated ones ",standalone,not_needed,[],,,1,True
+H025,clip_01,disliked,csv_presentation_order,automatic,"Expressions: despite being good some scenes are really of, like when the girl fell 
+Girl consistency: the pink girl turned into a baby in second 03:00 or around the fall",standalone,not_needed,[],,,1,True
+H025,clip_02,liked,csv_presentation_order,automatic,"Expressions: expressions are express quite well for what the video had, but not as good as the one i rated 5 star",standalone,not_needed,[],,,2,True
+H025,clip_02,disliked,csv_presentation_order,automatic,first shot car has the generic ai reflection on the rim edges of the characters and car,standalone,not_needed,[],,,2,True
+H025,clip_03,liked,csv_presentation_order,automatic,none,no_reason,not_needed,[],,,3,True
+H025,clip_03,disliked,csv_presentation_order,automatic,"expressions: mediocore not as good as the other, the mans face is too stiff ",standalone,not_needed,[],,,3,True
+H025,clip_04,liked,csv_presentation_order,automatic,"Expressions: expressions are express quite well for what the video had, ",standalone,not_needed,[],,,4,True
+H025,clip_04,disliked,csv_presentation_order,automatic,"Ai reflection: unlike video 10 and 9 this video presents almost no generic reflection and has a close resemblance to actual film characters
+Weird camera shot: the camera shot has a weird choice of angle and generic ai generated style",standalone,not_needed,[],,,4,True
+H025,clip_05,liked,csv_presentation_order,automatic,"ts tuff (good reflection, ",standalone,not_needed,[],,,5,True
+H025,clip_05,disliked,csv_presentation_order,automatic,terible ai reflection on the building,standalone,not_needed,[],,,5,True
+H025,clip_06,liked,csv_presentation_order,automatic,"ts tuff (Expressions: expressions are express quite well for what the video had, good expression good lighting almost like a real chinesemade brainrot)",standalone,not_needed,[],,,6,True
+H025,clip_06,disliked,csv_presentation_order,automatic,none,no_reason,not_needed,[],,,6,True
+H025,clip_07,liked,csv_presentation_order,automatic,"Expressions: expressions are express quite well for what the video had, ",standalone,not_needed,[],,,7,True
+H025,clip_07,disliked,csv_presentation_order,automatic,"
+Ai reflections: the video has the typical generic ai ""HD"" reflections which gets stuck in you're head and makes it hard to enjoy the video seriously",standalone,not_needed,[],,,7,True
+H025,clip_08,liked,csv_presentation_order,automatic,"Expressions: expressions are express quite well for what the video had, Ai reflection: unlike video 10 and 9 this video presents almost no generic reflection and has a close resemblance to actual film characters",standalone,not_needed,[],,,8,True
+H025,clip_08,disliked,csv_presentation_order,automatic,nothing,no_reason,not_needed,[],,,8,True
+H025,clip_09,liked,csv_presentation_order,automatic,Expressions: expressions are express quite well for what the video had,standalone,not_needed,[],,,9,True
+H025,clip_09,disliked,csv_presentation_order,automatic,"
+Ai reflections: the video has the typical generic ai ""HD"" reflections which gets stuck in you're head and makes it hard to enjoy the video seriously",standalone,not_needed,[],,,9,True
+H025,clip_10,liked,csv_presentation_order,automatic,Expressions: expressions are express quite well for what the video had,standalone,not_needed,[],,,10,True
+H025,clip_10,disliked,csv_presentation_order,automatic,"
+Ai reflections: the video has the typical generic ai ""HD"" reflections which gets stuck in you're head and makes it hard to enjoy the video seriously",standalone,not_needed,[],,,10,True
+H026,clip_01,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_02"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_03"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_04"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,10,True
+H026,clip_01,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_02"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_03"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_04"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,10,True
+H026,clip_02,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_03"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_04"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,9,True
+H026,clip_02,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_03"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_04"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,9,True
+H026,clip_03,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_04"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,8,True
+H026,clip_03,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_04"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,8,True
+H026,clip_04,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,7,True
+H026,clip_04,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_05"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,7,True
+H026,clip_05,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,6,True
+H026,clip_05,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_06"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,6,True
+H026,clip_06,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,5,True
+H026,clip_06,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_07"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,5,True
+H026,clip_07,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,4,True
+H026,clip_07,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_08"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,4,True
+H026,clip_08,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,3,True
+H026,clip_08,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_09"", ""answer"": ""Same reason as the previous one""}, {""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,3,True
+H026,clip_09,liked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_10"", ""answer"": ""I think its a bit interesting to see an AI create those drama.""}]",I think its a bit interesting to see an AI create those drama.,clip_10,2,True
+H026,clip_09,disliked,explicit_override,automatic,Same reason as the previous one,reference,context_supplied,"[{""clip_id"": ""clip_10"", ""answer"": ""The story is weird. ""}]",The story is weird. ,clip_10,2,True
+H026,clip_10,liked,explicit_override,automatic,I think its a bit interesting to see an AI create those drama.,standalone,not_needed,[],,,1,True
+H026,clip_10,disliked,explicit_override,automatic,The story is weird. ,standalone,not_needed,[],,,1,True
+H027,clip_01,liked,explicit_override,automatic,Ceritanya lucu,standalone,not_needed,[],,,10,True
+H027,clip_01,disliked,explicit_override,automatic,Agak kaku gerakannya,standalone,not_needed,[],,,10,True
+H027,clip_02,liked,explicit_override,automatic,Gambar terlihat seperti nyata,standalone,not_needed,[],,,9,True
+H027,clip_02,disliked,explicit_override,automatic,Suka semua,standalone,not_needed,[],,,9,True
+H027,clip_03,liked,explicit_override,automatic,Ceritanya bikin penasaran,standalone,not_needed,[],,,8,True
+H027,clip_03,disliked,explicit_override,automatic,Muka perempuannya mirip cuma beda rambut,standalone,not_needed,[],,,8,True
+H027,clip_04,liked,explicit_override,automatic,Ternyata suaminya tidak selingkuh,standalone,not_needed,[],,,7,True
+H027,clip_04,disliked,explicit_override,automatic,Tidak ada,no_reason,not_needed,[],,,7,True
+H027,clip_05,liked,explicit_override,automatic,Bagus ceritanya tentang bisnis,standalone,not_needed,[],,,6,True
+H027,clip_05,disliked,explicit_override,automatic,Mukanya kurang ganteng,standalone,not_needed,[],,,6,True
+H027,clip_06,liked,explicit_override,automatic,Menarik ceritanya,standalone,not_needed,[],,,5,True
+H027,clip_06,disliked,explicit_override,automatic,Gerakannya kaku,standalone,not_needed,[],,,5,True
+H027,clip_07,liked,explicit_override,automatic,Bikin penasaran,standalone,not_needed,[],,,4,True
+H027,clip_07,disliked,explicit_override,automatic,Tidak ada,no_reason,not_needed,[],,,4,True
+H027,clip_08,liked,explicit_override,automatic,Ceritanya menarik,standalone,not_needed,[],,,3,True
+H027,clip_08,disliked,explicit_override,automatic,Tidak ada,no_reason,not_needed,[],,,3,True
+H027,clip_09,liked,explicit_override,automatic,Bayinya lucu,standalone,not_needed,[],,,2,True
+H027,clip_09,disliked,explicit_override,automatic,Gerakannya agak kaku ya,standalone,not_needed,[],,,2,True
+H027,clip_10,liked,explicit_override,automatic,"Ceritanya unik, bisa kembali ke masa lalubdan memperbaiki kesalahan",standalone,not_needed,[],,,1,True
+H027,clip_10,disliked,explicit_override,automatic,Suka semua,standalone,not_needed,[],,,1,True
+H028,clip_01,liked,explicit_override,automatic,ai generated videos fits more with 3d rather than realism,standalone,not_needed,[],,,10,True
+H028,clip_01,disliked,explicit_override,automatic,"usually 3d animations dont have that much fps so it looks uncanny, other than that the audio is also bad",standalone,not_needed,[],,,10,True
+H028,clip_02,liked,explicit_override,automatic,neutral idk what to say,standalone,not_needed,[],,,9,True
+H028,clip_02,disliked,explicit_override,automatic,"need more foley sounds, audio wise its too empty, too much close ups its not visually clear. needs to be more optimzied for short form format",standalone,not_needed,[],,,9,True
+H028,clip_03,liked,explicit_override,automatic,very attractive women,standalone,not_needed,[],,,8,True
+H028,clip_03,disliked,explicit_override,automatic,the people look too attractive its uncanny. also the audio still bothers me,standalone,not_needed,[],,,8,True
+H028,clip_04,liked,explicit_override,automatic,no like this one,standalone,not_needed,[],,,7,True
+H028,clip_04,disliked,explicit_override,automatic,"The expression/emotion changes are too drastic, plot doesnt make sense at all ",standalone,not_needed,[],,,7,True
+H028,clip_05,liked,explicit_override,automatic,same as before,reference,context_supplied,"[{""clip_id"": ""clip_06"", ""answer"": ""This one looks less \""AI\"" that the others, i am assuming this is a real drama dubbed over it""}]","This one looks less ""AI"" that the others, i am assuming this is a real drama dubbed over it",clip_06,6,True
+H028,clip_05,disliked,explicit_override,review_override,"same as before, audio needs clean up, the dubbing sounds bad",reference,context_supplied,"[{""clip_id"": ""clip_06"", ""answer"": ""The dubbing sounds bad, also there were alot of \""ssss\"", needs alot of clean up on the audio""}]","The dubbing sounds bad, also there were alot of ""ssss"", needs alot of clean up on the audio",clip_06,6,True
+H028,clip_06,liked,explicit_override,automatic,"This one looks less ""AI"" that the others, i am assuming this is a real drama dubbed over it",standalone,not_needed,[],,,5,True
+H028,clip_06,disliked,explicit_override,automatic,"The dubbing sounds bad, also there were alot of ""ssss"", needs alot of clean up on the audio",standalone,not_needed,[],,,5,True
+H028,clip_07,liked,explicit_override,automatic,"Needs more dopamine inducing sfx on this one, but generally my opinions are neutral on this ",standalone,not_needed,[],,,4,True
+H028,clip_07,disliked,explicit_override,automatic,The shock expression of the man looks very forced,standalone,not_needed,[],,,4,True
+H028,clip_08,liked,explicit_override,automatic,"Enjoyed this one more, less close ups, ",standalone,not_needed,[],,,3,True
+H028,clip_08,disliked,explicit_override,review_override,"same as the last, the dialogue audio could be improved",reference,context_supplied,"[{""clip_id"": ""clip_09"", ""answer"": ""The audio/speeches dont reflect the environment that the are in, the \""come back to mommy\"" sounds so empty ""}]","The audio/speeches dont reflect the environment that the are in, the ""come back to mommy"" sounds so empty ",clip_09,3,True
+H028,clip_09,liked,explicit_override,automatic,Dont like how theres too much close ups,standalone,not_needed,[],,,2,True
+H028,clip_09,disliked,explicit_override,automatic,"The audio/speeches dont reflect the environment that the are in, the ""come back to mommy"" sounds so empty ",standalone,not_needed,[],,,2,True
+H028,clip_10,liked,explicit_override,automatic,nothing really,standalone,not_needed,[],,,1,True
+H028,clip_10,disliked,explicit_override,automatic,the narration is too mono tone. makes we want to fall asleep,standalone,not_needed,[],,,1,True
+H029,clip_01,liked,explicit_override,automatic,No,standalone,not_needed,[],,,10,True
+H029,clip_01,disliked,explicit_override,automatic,everything,standalone,not_needed,[],,,10,True
+H029,clip_02,liked,explicit_override,automatic,good frame ig,standalone,not_needed,[],,,9,True
+H029,clip_02,disliked,explicit_override,automatic,didy blud took 10 second to fall,standalone,not_needed,[],,,9,True
+H029,clip_03,liked,explicit_override,automatic,No,standalone,not_needed,[],,,8,True
+H029,clip_03,disliked,explicit_override,automatic,"Blurry video, ass theme, ",standalone,not_needed,[],,,8,True
+H029,clip_04,liked,explicit_override,automatic,the emotional display,standalone,not_needed,[],,,7,True
+H029,clip_04,disliked,explicit_override,automatic,"Lack of explanation of action, actor seems to act dumb, and convey inappropriate message to viewers, Bad script",standalone,not_needed,[],,,7,True
+H029,clip_05,liked,explicit_override,automatic,good script almost enjoyable,standalone,not_needed,[],,,6,True
+H029,clip_05,disliked,explicit_override,automatic,"Bad useless need to view the ""blueprint"" on the screen, mouth did not align with the voice, voice lacks tone and similarity to the actor identity",standalone,not_needed,[],,,6,True
+H029,clip_06,liked,explicit_override,automatic,The surprise reveal of the plot twist,standalone,not_needed,[],,,5,True
+H029,clip_06,disliked,explicit_override,automatic,"Bad voice act, Bad script, lack of tone and emotion, no background noise makes it feel empty",standalone,not_needed,[],,,5,True
+H029,clip_07,liked,explicit_override,automatic,"The reveal of tension, and risk for the main character",standalone,not_needed,[],,,4,True
+H029,clip_07,disliked,explicit_override,automatic,The bad acting destroys the suspense and tension of the story especially the gasp,standalone,not_needed,[],,,4,True
+H029,clip_08,liked,explicit_override,automatic,Magic,standalone,not_needed,[],,,3,True
+H029,clip_08,disliked,explicit_override,automatic,"Lack of tone, gross theme of story, bad voice acting, lack of detail, music has no impact on story only to keep fast tempo that is bad for story building",standalone,not_needed,[],,,3,True
+H029,clip_09,liked,explicit_override,automatic,No,standalone,not_needed,[],,,2,True
+H029,clip_09,disliked,explicit_override,automatic,"Unnecessary display of power, the over the top view of the male cast, sudden movement with blur that makes uneasy to the eye, bad lighting, Overall cringe",standalone,not_needed,[],,,2,True
+H029,clip_10,liked,explicit_override,automatic,"The idea of the clip, it is always interesting to see how magic is utilizes upon the screen",standalone,not_needed,[],,,1,True
+H029,clip_10,disliked,explicit_override,automatic,"The annoying narator that destroy the tempo and pacing of the clip, the plastic feel of the clip, the removal of human imperfection that couldn't be replicated",standalone,not_needed,[],,,1,True
